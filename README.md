@@ -1,9 +1,9 @@
 # PulseBlast
-Basic classes to work with creating pulsar templates and radio frequency interference excision.  
+Basic python oackage to work with creating pulsar templates and radio frequency interference excision.  
 
 Requires:  
   
-Python 3  
+Python 3.X  
   
 PyPulse  
 Numpy v1.14.2  
