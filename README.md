@@ -1,5 +1,5 @@
 # PulseBlast
-Basic python oackage to work with creating pulsar templates and radio frequency interference excision.  
+Basic python package to work with creating pulsar templates and radio frequency interference excision.  
 
 Requires:  
   
