@@ -3,6 +3,8 @@ Basic classes to work with creating pulsar templates and radio frequency interfe
 
 Requires:  
   
+Python 3  
+  
 PyPulse  
 Numpy v1.14.2  
 Scipy v1.0.1  
