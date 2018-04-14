@@ -370,15 +370,17 @@ class DataCull:
         n, bins, patches = plt.hist( array, bins = self.ar.getNchan(), density = True, color = 'black' )
 
         # Add a 'best fit' probability distribution function based on the fit parameter
-        xPlot = np.linspace( ( mean - (4*stdDev) ), ( mean + (4*stdDev) ), 1000 )
         if fit == 0 or fit > 2:
+            xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.norm.pdf( xPlot, mean, stdDev )
         elif fit == 1:
+            xPlot = np.linspace( 0, ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.halfnorm.pdf( xPlot, mean, stdDev )
         else:
+            xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.skewnorm.pdf( xPlot, self.skewness, mean, stdDev )
 
-        l = plt.plot( xPlot, yPlot, 'r--', linewidth=2 )
+        l = plt.plot( xPlot, yPlot, 'r--', linewidth = 2 )
 
         # Format axes. If matplotlibrc has been modified to allow LaTeX, plots will use LaTeX
         plt.ylabel( yAxis )
