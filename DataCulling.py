@@ -85,11 +85,11 @@ class DataCull:
         # Load the data cube for the file
         self.data = self.ar.getData()
 
-        print( "{} and {} fully loaded...".format( self.filename, template ) )
+        print( "{} and {} fully loaded...".format( self.filename, self.templateName ) )
 
 
     def __repr__( self ):
-        return "DataCull( filename = {}, directory = {}, SNLim = {}, printFull = {} )".format( self.filename, self.directory, self.SNLim, self.printFull )
+        return "DataCull( filename = {}, template = {}, directory = {}, SNLim = {}, printFull = {} )".format( self.filename, self.templateName, self.directory, self.SNLim, self.printFull )
 
     def __str__( self ):
         return self.directory + self.filename
@@ -105,18 +105,18 @@ class DataCull:
         '''
 
         # Parse the template's filename into a string
-        templateFilename = str( templateFilename )
+        self.templateName = str( templateFilename )
         root, ext = os.path.splitext( templateFilename )
 
         # If file extension does not exist, assume it is a .npy file
         if not ext:
             ext = '.npy'
-            templateFilename = root + ext
+            self.templateName = root + ext
 
         # Load the template
-        template = np.load( self.directory + templateFilename )
+        template = np.load( self.directory + self.templateName )
 
-        print( "Template {} loaded...".format( templateFilename ) )
+        print( "Template {} loaded...".format( self.templateName ) )
 
         return template
 
