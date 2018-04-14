@@ -61,9 +61,9 @@ class Template:
         archive = self.loadArchive()
 
         # Initialize the template if this is the first call
-        if self.templateCreationScriptL.counter == 0:
+        if self._templateCreationScriptL.counter == 0:
             self.templateProfileL = np.zeros( archive.ar.getNbin(), dtype = float )
-            self.templateCreationScriptL.__func__.counter += 1
+            self._templateCreationScriptL.__func__.counter += 1
 
         # Iterate through each subint and channel to add each profile together
         for time in np.arange( archive.ar.getNsubint() ):
@@ -85,9 +85,9 @@ class Template:
         archive = self.loadArchive()
 
         # Initialize the template if this is the first call
-        if self.templateCreationScript430.counter == 0:
+        if self._templateCreationScript430.counter == 0:
             self.templateProfile430 = np.zeros( archive.ar.getNbin(), dtype = float )
-            self.templateCreationScript430.__func__.counter += 1
+            self._templateCreationScript430.__func__.counter += 1
 
         # Iterate through each subint and channel to add each profile together
         for time in np.arange( archive.ar.getNsubint() ):
@@ -122,8 +122,8 @@ class Template:
         self.templateProfile430, self.templateProfileL = [], []
 
         # Set the call counters for the creation scripts to 0
-        self.templateCreationScript430.__func__.counter = 0
-        self.templateCreationScriptL.__func__.counter = 0
+        self._templateCreationScript430.__func__.counter = 0
+        self._templateCreationScriptL.__func__.counter = 0
 
         # Cycle through each file in the stored directory
         for i, file in enumerate( os.listdir( self.directory ) ):
@@ -149,7 +149,7 @@ class Template:
                     if frequencyBand == 'lbw' or frequencyBand == 'L_Band':
 
                         if doType == 0 or doType == 1:
-                            self.templateProfileL = self.templateCreationScriptL()
+                            self.templateProfileL = self._templateCreationScriptL()
 
                             # Check if a save name was provided
                             if bandNameL == None:
@@ -162,7 +162,7 @@ class Template:
                     elif frequencyBand == '430':
 
                         if doType == 0 or doType == 2:
-                            self.templateProfile430 = self.templateCreationScript430()
+                            self.templateProfile430 = self._templateCreationScript430()
 
                             # Check if a save name was provided
                             if bandName430 == None:

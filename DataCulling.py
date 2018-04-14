@@ -32,10 +32,11 @@ class DataCull:
     If no directory is given, the current working directory will be used.
     '''
 
-    def __init__( self, filename, directory = None, SNLim = 3000, printFull = False ):
+    def __init__( self, filename, template, directory = None, SNLim = 3000, printFull = False ):
 
         '''
         Initializes all archives and parameters in the data cube for a given file.
+        Also requires a template to be parsed in.
         A custom signal / noise lower bound can also be set on initialization but
         the default is 3000.
         This will exit the current archive if the signal / noise ratio is lower
@@ -59,6 +60,9 @@ class DataCull:
             print( "Error: File {} not found in this directory...".format( filename ) )
             exit()
 
+        # Load the template
+        self.template = self._loadTemplate( template )
+
         # Parse printFull option
         self.printFull = printFull
 
@@ -81,10 +85,7 @@ class DataCull:
         # Load the data cube for the file
         self.data = self.ar.getData()
 
-        # Initialize data skewness to be overwritten later
-        self.skewness = 0.0
-
-        print( "Archive loaded for {}...".format( self.filename ) )
+        print( "{} and {} fully loaded...".format( self.filename, template ) )
 
 
     def __repr__( self ):
@@ -94,7 +95,7 @@ class DataCull:
         return self.directory + self.filename
 
 
-    def loadTemplate( self, templateFilename ):
+    def _loadTemplate( self, templateFilename ):
 
         '''
         Loads a template specified by the user. If no extension is given, the
@@ -120,7 +121,59 @@ class DataCull:
         return template
 
 
-    def rmsRejection( self, template, criterion, showPlot = False ):
+    def reject( self, criterion = 'chauvenet', iterations = 1, showPlots = False ):
+
+        '''
+        Performs the rejection algorithm until the number of iterations has been
+        reached or the data culling is complete, whichever comes first. The
+        default number of iterations is 1.
+        Requires the criterion to be set with the default criterion
+        being Chauvenet's criterion.
+        This is the function you should use to reject all outliers fully.
+        '''
+
+        print( "Beginning data rejection for {}...".format( self.filename ) )
+
+        # Initialize the completion flag to false
+        self.rejectionCompletionFlag = False
+
+        for i in np.arange( iterations ):
+
+            self.rmsRejection( criterion, showPlots )
+
+            # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
+            if self.rejectionCompletionFlag == True:
+                generation = i + 1
+                print( "RMS data rejection for {} complete after {} generations...".format( self.filename, generation ) )
+                break
+
+        # If the completion flag is still false, the cycles finished before full excision
+        if self.rejectionCompletionFlag == False:
+            print( "Maximum number of iterations ({}) completed...".format( iterations ) )
+
+        # Re-initialize the completion flag to false
+        self.rejectionCompletionFlag = False
+
+        for i in np.arange( iterations ):
+
+            self.binShiftRejection( showPlots )
+
+            # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
+            if self.rejectionCompletionFlag == True:
+                generation = i + 1
+                print( "Bin shift data rejection for {} complete after {} generations...".format( self.filename, generation ) )
+                break
+
+        # If the completion flag is still false, the cycles finished before full excision
+        if self.rejectionCompletionFlag == False:
+            print( "Maximum number of iterations ({}) completed...".format( iterations ) )
+
+
+        # Re-load the data cube for the file
+        self.data = self.ar.getData()
+
+
+    def rmsRejection( self, criterion, showPlot = False ):
 
         '''
         Rejects outlier root mean squared values for off pulse regions and
@@ -131,7 +184,7 @@ class DataCull:
         self.data = self.ar.getData()
 
         # Return the array of RMS values for each profile
-        rmsArray = self.createRmsMatrix( template )
+        rmsArray = self.createRmsMatrix()
 
         # Reshape RMS array to be linear and store in a new RMS array
         linearRmsArray = np.reshape( rmsArray, ( self.ar.getNchan() * self.ar.getNsubint() ) )
@@ -172,61 +225,7 @@ class DataCull:
         print( "Data rejection cycle complete..." )
 
 
-    def reject( self, template, criterion = 'chauvenet', iterations = 1 ):
-
-        '''
-        Performs the rejection algorithm until the number of iterations has been
-        reached or the data culling is complete, whichever comes first. The
-        default number of iterations is 1.
-        Requires a template and criterion to be set with the default criterion
-        being Chauvenet's criterion.
-        This is the function you should use to reject all outliers fully.
-        '''
-
-        # Kurtosis (skewness)
-
-        print( "Beginning data rejection for {}...".format( self.filename ) )
-
-        # Initialize the completion flag to false
-        self.rejectionCompletionFlag = False
-
-        for i in np.arange( iterations ):
-
-            self.rmsRejection( template, criterion, False )
-
-            # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
-            if self.rejectionCompletionFlag == True:
-                generation = i + 1
-                print( "RMS data rejection for {} complete after {} generations...".format( self.filename, generation ) )
-                break
-
-        # If the completion flag is still false, the cycles finished before full excision
-        if self.rejectionCompletionFlag == False:
-            print( "Maximum number of iterations ({}) completed...".format( iterations ) )
-
-        # Re-initialize the completion flag to false
-        self.rejectionCompletionFlag = False
-
-        for i in np.arange( iterations ):
-
-            self.binShiftRejection( template, False )
-
-            # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
-            if self.rejectionCompletionFlag == True:
-                generation = i + 1
-                print( "Bin shift data rejection for {} complete after {} generations...".format( self.filename, generation ) )
-                break
-
-        # If the completion flag is still false, the cycles finished before full excision
-        if self.rejectionCompletionFlag == False:
-            print( "Maximum number of iterations ({}) completed...".format( iterations ) )
-
-
-        # Re-load the data cube for the file
-        self.data = self.ar.getData()
-
-
-    def createRmsMatrix( self, template ):
+    def createRmsMatrix( self ):
 
         '''
         Creates an array of RMS values for each profile in one file.
@@ -236,7 +235,7 @@ class DataCull:
         rmsMatrix = np.zeros( ( self.ar.getNsubint(), self.ar.getNchan() ), dtype = float )
 
         # Create a mask along the bin space on the template profile
-        mask = utils.binMaskFromTemplate( template )
+        mask = utils.binMaskFromTemplate( self.template )
 
         # Loop over the time and frequency indices (subints and channels)
         for time in np.arange( self.ar.getNsubint() ):
@@ -257,7 +256,7 @@ class DataCull:
         return rmsMatrix
 
 
-    def binShiftRejection( self, template, showPlot = False ):
+    def binShiftRejection( self, showPlot = False ):
 
         '''
         Gets the bin shift and bin shift errors of each profile in the file and
@@ -265,7 +264,7 @@ class DataCull:
         Then, rejects based on Chauvenet criterion
         '''
 
-        nBinShift, nBinError = self.getBinShifts( template )
+        nBinShift, nBinError = self.getBinShifts()
 
         # Reshape the bin shift and bin shift error arrays to be linear
         linearNBinShift, linearNBinError = np.reshape( nBinShift, ( self.ar.getNchan() * self.ar.getNsubint() ) ), np.reshape( nBinError, ( self.ar.getNchan() * self.ar.getNsubint() ) )
@@ -282,7 +281,7 @@ class DataCull:
             plt.subplot(211)
             self.histogramPlot( linearNBinShift, muS, sigmaS, 0, r'Bin Shift from Template, $\hat{\tau}$', 'Frequency Density' )
             plt.subplot(212)
-            self.histogramPlot( linearNBinError, muE, sigmaE, 1, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
+            self.histogramPlot( linearNBinError, muE, sigmaE, 2, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
 
             # Adjust subplots so they look nice
             plt.subplots_adjust( top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40 )
@@ -306,7 +305,7 @@ class DataCull:
 
         print( "Data rejection cycle complete..." )
 
-    def getBinShifts( self, template ):
+    def getBinShifts( self ):
 
         '''
         Returns the bin shift and bin shift error.
@@ -318,7 +317,7 @@ class DataCull:
         self.data = self.ar.getData()
 
         # Return the array of RMS values for each profile
-        rmsArray = self.createRmsMatrix( template )
+        rmsArray = self.createRmsMatrix()
 
         # Initialize the bin shifts and bin shift errors
         nBinShift = np.zeros( ( self.ar.getNsubint(), self.ar.getNchan() ), dtype = float )
@@ -337,7 +336,7 @@ class DataCull:
 
                     # Attempt to calculate the bin shift and error. If not possible, set the profile to 0.
                     try:
-                        tauccf, tauhat, bhat, sigma_tau, sigma_b, snr, rho = get_toa3( template, self.data[time][frequency], rmsArray[time][frequency], dphi_in=0.1, snrthresh=0., nlagsfit=5, norder=2 )
+                        tauccf, tauhat, bhat, sigma_tau, sigma_b, snr, rho = get_toa3( self.template, self.data[time][frequency], rmsArray[time][frequency], dphi_in=0.1, snrthresh=0., nlagsfit=5, norder=2 )
 
                         nBinShift[time][frequency] = tauhat
                         nBinError[time][frequency] = sigma_tau
@@ -377,8 +376,10 @@ class DataCull:
             xPlot = np.linspace( 0, ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.halfnorm.pdf( xPlot, mean, stdDev )
         else:
+            skew = spyst.skew( array, nan_policy = 'omit' )
+            print(skew)
             xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
-            yPlot = spyst.skewnorm.pdf( xPlot, self.skewness, mean, stdDev )
+            yPlot = spyst.skewnorm.pdf( xPlot, skew, mean, stdDev )
 
         l = plt.plot( xPlot, yPlot, 'r--', linewidth = 2 )
 
