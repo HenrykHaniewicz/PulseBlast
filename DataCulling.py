@@ -139,13 +139,12 @@ class DataCull:
         # Best fit of data using a Gaussian fit
         mu, sigma = np.nanmean( linearRmsArray ), np.nanstd( linearRmsArray )
 
-        # Creates the histogram
-        self.histogramPlot( linearRmsArray, mu, sigma, 0, 'Root Mean Squared', 'Frequency Density' )
-
         if showPlot == True:
+
+            # Creates the histogram
+            self.histogramPlot( linearRmsArray, mu, sigma, 0, 'Root Mean Squared', 'Frequency Density' )
+
             plt.show()
-        else:
-            plt.close()
 
         # Determine which criterion to use to reject data
         if criterion == 'chauvenet': # Chauvenet's Criterion
@@ -164,7 +163,7 @@ class DataCull:
         # Set the weights of potential noise in each profile to 0
         for time, frequency in zip( np.where( rejectionCriterion )[0], np.where( rejectionCriterion )[1] ):
             print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-            self.ar.setWeights( 0, t=time, f=frequency )
+            self.ar.setWeights( 0, t = time, f = frequency )
 
         # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
         if( len( np.where( rejectionCriterion )[0] ) == 0 ):
@@ -277,19 +276,18 @@ class DataCull:
         # Mean and standard deviation of the bin shift error
         muE, sigmaE = np.nanmean( linearNBinError ), np.nanstd( linearNBinError )
 
-        # Create the histograms as two subplots
-        plt.subplot(211)
-        self.histogramPlot( linearNBinShift, muS, sigmaS, 0, r'Bin Shift from Template, $\hat{\tau}$', 'Frequency Density' )
-        plt.subplot(212)
-        self.histogramPlot( linearNBinError, muE, sigmaE, 1, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
-
-        # Adjust subplots so they look nice
-        plt.subplots_adjust(top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40)
-
         if showPlot == True:
+
+            # Create the histograms as two subplots
+            plt.subplot(211)
+            self.histogramPlot( linearNBinShift, muS, sigmaS, 0, r'Bin Shift from Template, $\hat{\tau}$', 'Frequency Density' )
+            plt.subplot(212)
+            self.histogramPlot( linearNBinError, muE, sigmaE, 1, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
+
+            # Adjust subplots so they look nice
+            plt.subplots_adjust( top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40 )
+
             plt.show()
-        else:
-            plt.close()
 
         rejectionCriterionS, rejectionCriterionE = mathUtils.chauvenet( nBinShift, muS, sigmaS ), mathUtils.chauvenet( nBinError, muE, sigmaE )
 
@@ -343,9 +341,11 @@ class DataCull:
 
                         nBinShift[time][frequency] = tauhat
                         nBinError[time][frequency] = sigma_tau
+
                     except:
                         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
                         self.ar.setWeights( 0, t = time, f = frequency )
+
                         nBinShift[time][frequency] = np.nan
                         nBinError[time][frequency] = np.nan
 
