@@ -300,7 +300,7 @@ class DataCull:
             self.ar.setWeights( 0, t = time, f = frequency )
 
         # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
-        if len( np.where( rejectionCriterionS )[0] ) and len( np.where( rejectionCriterionE )[0] ) == 0:
+        if len( np.where( rejectionCriterionS )[0] ) == 0 and len( np.where( rejectionCriterionE )[0] ) == 0:
             self.rejectionCompletionFlag = True
 
         print( "Data rejection cycle complete..." )
@@ -377,7 +377,6 @@ class DataCull:
             yPlot = spyst.halfnorm.pdf( xPlot, mean, stdDev )
         else:
             skew = spyst.skew( array, nan_policy = 'omit' )
-            print(skew)
             xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.skewnorm.pdf( xPlot, skew, mean, stdDev )
 
