@@ -120,7 +120,7 @@ class DataCull:
         return template
 
 
-    def rmsRejection( self, template, criterion ):
+    def rmsRejection( self, template, criterion, showPlot = False ):
 
         '''
         Rejects outlier root mean squared values for off pulse regions and
@@ -140,7 +140,12 @@ class DataCull:
         mu, sigma = np.nanmean( linearRmsArray ), np.nanstd( linearRmsArray )
 
         # Creates the histogram
-        self.histogramPlot( linearRmsArray, mu, sigma, 0, 'Root Mean Squared', 'Frequency Density', True )
+        self.histogramPlot( linearRmsArray, mu, sigma, 0, 'Root Mean Squared', 'Frequency Density' )
+
+        if showPlot == True:
+            plt.show()
+        else:
+            plt.close()
 
         # Determine which criterion to use to reject data
         if criterion == 'chauvenet': # Chauvenet's Criterion
@@ -188,7 +193,7 @@ class DataCull:
 
         for i in np.arange( iterations ):
 
-            self.rmsRejection( template, criterion )
+            self.rmsRejection( template, criterion, False )
 
             # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
             if self.rejectionCompletionFlag == True:
@@ -258,6 +263,54 @@ class DataCull:
         '''
         Gets the bin shift and bin shift errors of each profile in the file and
         plots both quantities as a histogram.
+        Then, rejects based on Chauvenet criterion
+        '''
+
+        nBinShift, nBinError = self.getBinShifts( template )
+
+        # Reshape the bin shift and bin shift error arrays to be linear
+        linearNBinShift, linearNBinError = np.reshape( nBinShift, ( self.ar.getNchan() * self.ar.getNsubint() ) ), np.reshape( nBinError, ( self.ar.getNchan() * self.ar.getNsubint() ) )
+
+        # Mean and standard deviation of the bin shift
+        muS, sigmaS = np.nanmean( linearNBinShift ), np.nanstd( linearNBinShift )
+
+        # Mean and standard deviation of the bin shift error
+        muE, sigmaE = np.nanmean( linearNBinError ), np.nanstd( linearNBinError )
+
+        # Create the histograms as two subplots
+        plt.subplot(211)
+        self.histogramPlot( linearNBinShift, muS, sigmaS, 0, r'Bin Shift from Template, $\hat{\tau}$', 'Frequency Density' )
+        plt.subplot(212)
+        self.histogramPlot( linearNBinError, muE, sigmaE, 1, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
+
+        # Adjust subplots so they look nice
+        plt.subplots_adjust(top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40)
+
+        if showPlot == True:
+            plt.show()
+        else:
+            plt.close()
+
+        rejectionCriterionS, rejectionCriterionE = mathUtils.chauvenet( nBinShift, muS, sigmaS ), mathUtils.chauvenet( nBinError, muE, sigmaE )
+
+        # Set the weights of potential noise in each profile to 0
+        for time, frequency in zip( np.where( rejectionCriterionS )[0], np.where( rejectionCriterionS )[1] ):
+            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+            self.ar.setWeights( 0, t = time, f = frequency )
+
+        for time, frequency in zip( np.where( rejectionCriterionE )[0], np.where( rejectionCriterionE )[1] ):
+            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+            self.ar.setWeights( 0, t = time, f = frequency )
+
+        # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
+        if len( np.where( rejectionCriterionS )[0] ) and len( np.where( rejectionCriterionE )[0] ) == 0:
+            self.rejectionCompletionFlag = True
+
+        print( "Data rejection cycle complete..." )
+
+    def getBinShifts( self, template ):
+
+        '''
         Returns the bin shift and bin shift error.
         '''
 
@@ -284,6 +337,7 @@ class DataCull:
 
                 else:
 
+                    # Attempt to calculate the bin shift and error. If not possible, set the profile to 0.
                     try:
                         tauccf, tauhat, bhat, sigma_tau, sigma_b, snr, rho = get_toa3( template, self.data[time][frequency], rmsArray[time][frequency], dphi_in=0.1, snrthresh=0., nlagsfit=5, norder=2 )
 
@@ -291,55 +345,17 @@ class DataCull:
                         nBinError[time][frequency] = sigma_tau
                     except:
                         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-                        self.ar.setWeights( 0, t=time, f=frequency )
+                        self.ar.setWeights( 0, t = time, f = frequency )
                         nBinShift[time][frequency] = np.nan
                         nBinError[time][frequency] = np.nan
 
         # Mask the nan values in the array so that histogramPlot doesn't malfunction
         nBinShift, nBinError = np.ma.array( nBinShift, mask = np.isnan( nBinShift ) ), np.ma.array( nBinError, mask = np.isnan( nBinError ) )
 
-        # Reshape the bin shift and bin shift error arrays to be linear
-        linearNBinShift, linearNBinError = np.reshape( nBinShift, ( self.ar.getNchan() * self.ar.getNsubint() ) ), np.reshape( nBinError, ( self.ar.getNchan() * self.ar.getNsubint() ) )
-
-        # Mean and standard deviation of the bin shift
-        muS, sigmaS = np.nanmean( linearNBinShift ), np.nanstd( linearNBinShift )
-
-        # Mean and standard deviation of the bin shift error
-        muE, sigmaE = np.nanmean( linearNBinError ), np.nanstd( linearNBinError )
-
-        # Create the histograms as two subplots
-        plt.subplot(211)
-        self.histogramPlot( linearNBinShift, muS, sigmaS, 0, r'Bin Shift from Template, $\hat{\tau}$', 'Frequency Density', False )
-        plt.subplot(212)
-        self.histogramPlot( linearNBinError, muE, sigmaE, 1, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density', False )
-
-        # Adjust subplots so they look nice
-        plt.subplots_adjust(top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40)
-
-        if showPlot == True:
-            plt.show()
-        else:
-            plt.close()
-
-        rejectionCriterionS, rejectionCriterionE = mathUtils.chauvenet( nBinShift, muS, sigmaS ), mathUtils.chauvenet( nBinError, muE, sigmaE )
-
-        # Set the weights of potential noise in each profile to 0
-        for time, frequency in zip( np.where( rejectionCriterionS )[0], np.where( rejectionCriterionS )[1] ):
-            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-            self.ar.setWeights( 0, t=time, f=frequency )
-
-        for time, frequency in zip( np.where( rejectionCriterionE )[0], np.where( rejectionCriterionE )[1] ):
-            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-            self.ar.setWeights( 0, t=time, f=frequency )
-
-        # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
-        if len( np.where( rejectionCriterionS )[0] ) and len( np.where( rejectionCriterionE )[0] ) == 0:
-            self.rejectionCompletionFlag = True
-
-        print( "Data rejection cycle complete..." )
+        return nBinShift, nBinError
 
 
-    def histogramPlot( self, array, mean = 0, stdDev = 1, fit = 0, xAxis = 'x-axis', yAxis = 'y-axis', showPlot = False ):
+    def histogramPlot( self, array, mean = 0, stdDev = 1, fit = 0, xAxis = 'x-axis', yAxis = 'y-axis' ):
 
         '''
         Plots and returns a histogram of some linear data array using matplotlib
@@ -348,7 +364,6 @@ class DataCull:
         If no mean or stddev are provided, a fit centered around a mean of 0 with
         stddev of 1 will be used. If a fit is given outside the range, Gaussian is used.
         Also use this function to set the x and y axis names.
-        Can also toggle showing of the histogram in this function.
         '''
 
         # Plot the histogram
@@ -370,10 +385,6 @@ class DataCull:
         plt.xlabel( xAxis )
         plt.title( r'$\mu=%.3f,\ \sigma=%.3f$' % ( mean, stdDev ) )
         plt.grid( True )
-
-        # If showPlot has been toggled, output the plots, otherwise just use the fit data for the next iteration
-        if showPlot == True:
-            plt.show()
 
         # Returns a 3-tuple of the form data, frequency bins, patches
         return n, bins, patches
