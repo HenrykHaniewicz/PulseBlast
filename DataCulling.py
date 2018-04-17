@@ -116,8 +116,6 @@ class DataCull:
         # Load the template
         template = np.load( self.directory + self.templateName )
 
-        print( "Template {} loaded...".format( self.templateName ) )
-
         return template
 
 
@@ -202,7 +200,7 @@ class DataCull:
         # Determine which criterion to use to reject data
         if criterion == 'chauvenet': # Chauvenet's Criterion
 
-            rejectionCriterion = mathUtils.chauvenet( rmsArray, mu, sigma )
+            rejectionCriterion = mathUtils.chauvenet( rmsArray, mu, sigma, 3 )
 
         elif criterion == 'DMAD': # Double Median Absolute Deviation
 
@@ -281,7 +279,7 @@ class DataCull:
             plt.subplot(211)
             self.histogramPlot( linearNBinShift, muS, sigmaS, 0, r'Bin Shift from Template, $\hat{\tau}$', 'Frequency Density' )
             plt.subplot(212)
-            self.histogramPlot( linearNBinError, muE, sigmaE, 2, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
+            self.histogramPlot( linearNBinError, muE, sigmaE, 3, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
 
             # Adjust subplots so they look nice
             plt.subplots_adjust( top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40 )
@@ -369,16 +367,22 @@ class DataCull:
         n, bins, patches = plt.hist( array, bins = self.ar.getNchan(), density = True, color = 'black' )
 
         # Add a 'best fit' probability distribution function based on the fit parameter
-        if fit == 0 or fit > 2:
+        if fit == 0 or fit > 3:
             xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
-            yPlot = spyst.norm.pdf( xPlot, mean, stdDev )
+            params = spyst.norm.fit( array )
+            print(params)
+            yPlot = spyst.norm.pdf( xPlot, *params )
         elif fit == 1:
             xPlot = np.linspace( 0, ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.halfnorm.pdf( xPlot, mean, stdDev )
-        else:
+        elif fit == 2:
             skew = spyst.skew( array, nan_policy = 'omit' )
             xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.skewnorm.pdf( xPlot, skew, mean, stdDev )
+        else:
+            xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
+            params = spyst.maxwell.fit( array, floc = min( array ) )
+            yPlot = spyst.maxwell.pdf( xPlot, *params )
 
         l = plt.plot( xPlot, yPlot, 'r--', linewidth = 2 )
 
