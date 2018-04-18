@@ -126,7 +126,7 @@ class Template:
         self._templateCreationScriptL.__func__.counter = 0
 
         # Cycle through each file in the stored directory
-        for i, file in enumerate( os.listdir( self.directory ) ):
+        for file in os.listdir( self.directory ):
             # Set the file to be a global variable in the class for use elsewhere
             self.file = file
 
