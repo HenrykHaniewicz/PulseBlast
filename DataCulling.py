@@ -9,6 +9,7 @@ from pypulse.utils import get_toa3
 # Plotting imports
 import matplotlib.pyplot as plt
 import scipy.stats as spyst
+import scipy.optimize as opt
 
 # Other imports
 import numpy as np
@@ -47,6 +48,8 @@ class DataCull:
 
         print( "Initializing DataCull object..." )
 
+        self.SNError = False
+
         # Parse directory in string or choose CWD if no directory given
         if directory == None:
             self.directory = str( os.getcwd() )
@@ -80,12 +83,13 @@ class DataCull:
         if self.ar.getSN() < SNLim:
             print( "Signal / Noise ratio is way too low. (Below {})".format( SNLim ) )
             print( "Data set to be thrown out..." )
-            exit()
+            self.SNError = True
 
         # Load the data cube for the file
         self.data = self.ar.getData()
 
-        print( "{} and {} fully loaded...".format( self.filename, self.templateName ) )
+        if self.SNError == False:
+            print( "{} and {} fully loaded...".format( self.filename, self.templateName ) )
 
 
     def __repr__( self ):
@@ -233,7 +237,9 @@ class DataCull:
         rmsMatrix = np.zeros( ( self.ar.getNsubint(), self.ar.getNchan() ), dtype = float )
 
         # Create a mask along the bin space on the template profile
-        mask = utils.binMaskFromTemplate( self.template )
+        #mask = utils.binMaskFromTemplate( self.template )
+        mask = np.zeros( self.ar.getNbin(), dtype = int )
+        mask[920:1061] = 1
 
         # Loop over the time and frequency indices (subints and channels)
         for time in np.arange( self.ar.getNsubint() ):
@@ -369,9 +375,8 @@ class DataCull:
         # Add a 'best fit' probability distribution function based on the fit parameter
         if fit == 0 or fit > 3:
             xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
-            params = spyst.norm.fit( array )
-            print(params)
-            yPlot = spyst.norm.pdf( xPlot, *params )
+            params = opt.curve_fit( spyst.norm.pdf, bins[1:], n, p0 = [mean, stdDev] )
+            yPlot = spyst.norm.pdf( xPlot, *params[0] )
         elif fit == 1:
             xPlot = np.linspace( 0, ( mean + ( 4 * stdDev ) ), 1000 )
             yPlot = spyst.halfnorm.pdf( xPlot, mean, stdDev )
@@ -381,8 +386,8 @@ class DataCull:
             yPlot = spyst.skewnorm.pdf( xPlot, skew, mean, stdDev )
         else:
             xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
-            params = spyst.maxwell.fit( array, floc = min( array ) )
-            yPlot = spyst.maxwell.pdf( xPlot, *params )
+            params = opt.curve_fit( spyst.maxwell.pdf, bins[1:], n, p0 = [mean, stdDev] )
+            yPlot = spyst.maxwell.pdf( xPlot, *params[0] )
 
         l = plt.plot( xPlot, yPlot, 'r--', linewidth = 2 )
 
