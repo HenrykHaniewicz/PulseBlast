@@ -41,7 +41,7 @@ class Timing:
         return self.template, self.directory
 
 
-    def getTOAs( self, frequencyBand, exciseRFI = False ):
+    def getTOAs( self, frequencyBand, save = None, exciseRFI = False ):
 
         '''
         Calculate and return Time-of-Arrivals (TOAs) for the given directory.
@@ -87,7 +87,7 @@ class Timing:
 
                         if frontend == 'lbw' or frontend == 'L_Band':
 
-                            cullObject.ar.time( cullObject.template, filename = None, MJD = True )
+                            cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 
                         else:
                             print( "430 band file" )
@@ -96,7 +96,7 @@ class Timing:
 
                         if frontend == '430':
 
-                            cullObject.ar.time( cullObject.template, filename = None, MJD = True )
+                            cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 
                         else:
                             print( "L-Band file" )

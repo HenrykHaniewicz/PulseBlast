@@ -239,7 +239,7 @@ class DataCull:
         # Create a mask along the bin space on the template profile
         #mask = utils.binMaskFromTemplate( self.template )
         mask = np.zeros( self.ar.getNbin(), dtype = int )
-        mask[920:1061] = 1
+        mask[990:1100] = 1
 
         # Loop over the time and frequency indices (subints and channels)
         for time in np.arange( self.ar.getNsubint() ):
