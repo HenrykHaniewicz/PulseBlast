@@ -1,8 +1,6 @@
 # Timing class
 # Henryk T. Haniewicz, 2018
 
-# PyPulse imports
-from pypulse.archive import Archive
 
 # Other imports
 import os
@@ -79,13 +77,13 @@ class Timing:
                     if exciseRFI:
                         cullObject.reject( 'chauvenet', 15, True )
 
-                    cullObject.ar.tscrunch( nsubint = cullObject.ar.getNsubint() // 2 )
-                    cullObject.ar.fscrunch( nchan = 1 )
-
                     # Check which band the fits file belongs to
                     if frequencyBand == 'L':
 
                         if frontend == 'lbw' or frontend == 'L_Band':
+
+                            cullObject.ar.tscrunch( nsubint = 6 )
+                            cullObject.ar.fscrunch( nchan = 1 )
 
                             cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 
@@ -95,6 +93,9 @@ class Timing:
                     elif frequencyBand == '430':
 
                         if frontend == '430':
+
+                            cullObject.ar.tscrunch( nsubint = 2 )
+                            cullObject.ar.fscrunch( nchan = 1 )
 
                             cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 

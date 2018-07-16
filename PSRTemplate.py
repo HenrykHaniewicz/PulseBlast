@@ -1,9 +1,6 @@
 # Pulsar Template Class, Python 3
 # Henryk T. Haniewicz, 2018
 
-# PyPulse imports
-from pypulse.archive import Archive
-
 # System imports
 import os
 
@@ -58,7 +55,7 @@ class Template:
         '''
 
         # Load the archive using DataCull for convenience
-        archive = self.loadArchive()
+        archive = self._loadArchive()
 
         # Initialize the template if this is the first call
         if self._templateCreationScriptL.counter == 0:
