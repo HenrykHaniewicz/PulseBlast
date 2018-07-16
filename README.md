@@ -9,5 +9,4 @@ PyPulse
 Numpy v1.14.2  
 Scipy v1.0.1  
 Astropy v3.0.1  
-Matplotlib v2.2.2  
-Choice v0.1  
+Matplotlib v2.2.2 
