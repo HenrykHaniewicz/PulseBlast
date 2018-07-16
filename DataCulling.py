@@ -404,9 +404,6 @@ class DataCull:
 
         '''
         Plots pulse profiles as a waterfall plot using PyPulse.
-        If the data cube is of incorrect shape to parse to PyPulse, the user is
-        asked to scrunch the data along as many axes as necessary.
-        Alternatively, the user can quit the function / program entirely.
         '''
 
         if len( np.shape( self.ar.getData() ) ) == 2:
@@ -422,9 +419,6 @@ class DataCull:
 
         '''
         Plots pulse profiles as a greyscale plot using PyPulse.
-        If the data cube is of incorrect shape to parse to PyPulse, the user is
-        asked to scrunch the data along as many axes as necessary.
-        Alternatively, the user can quit the function / program entirely.
         '''
 
         if len( np.shape( self.ar.getData() ) ) == 2:
