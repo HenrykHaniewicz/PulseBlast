@@ -14,7 +14,6 @@ import scipy.optimize as opt
 # Other imports
 import numpy as np
 import math
-import choice
 import os
 import mathUtils
 import otherUtilities as utils
@@ -413,15 +412,8 @@ class DataCull:
         if len( np.shape( self.ar.getData() ) ) == 2:
             self.ar.waterfall( offset = offset, border = 0.1 )
 
-        elif len( np.shape( self.ar.getData() ) ) > 2:
-            print( "Please perform enough dimensional scrunches to reduce the dimensions to 2." )
-            print( "Perform a full scrunch in one dimension?" )
-            choice = self.scrunchChoices()
-            if choice != 'exit':
-                self.waterfallPlot( offset )
-
         else:
-            print( "Too few dimensions. Please check the data set or retry." )
+            print( "Invalid dimensions. Must be 2. Currently: {}".format( len( np.shape( self.ar.getData() ) ) ) )
 
         return self
 
@@ -439,35 +431,7 @@ class DataCull:
             plt.xlabel( "Phase bins" )
             self.ar.imshow( cbar = True )
 
-        elif len( np.shape( self.ar.getData() ) ) > 2:
-            print( "Please perform enough dimensional scrunches to reduce the dimensions to 2." )
-            print( "Perform a full scrunch in one dimension?" )
-            choice = self.scrunchChoices()
-            if choice != 'exit':
-                self.greyscalePlot()
-
         else:
-            print( "Too few dimensions. Please check the data set or retry." )
+            print( "Invalid dimensions. Must be 2. Currently: {}".format( len( np.shape( self.ar.getData() ) ) ) )
 
         return self
-
-
-    def scrunchChoices( self ):
-
-        '''
-        Allows the user to make a selection on which dimension they would like
-        to scrunch in.
-        '''
-
-        # Choose from a set of options
-        scrunchChoice = choice.Menu( ['time', 'frequency', 'polarization', 'exit'] ).ask()
-        if scrunchChoice == 'time':
-            self.ar.tscrunch()
-        elif scrunchChoice == 'frequency':
-            self.ar.fscrunch( nchan = 1 )
-        elif scrunchChoice == 'polarization':
-            self.ar.pscrunch()
-        else:
-            print( "Exiting choices..." )
-
-        return scrunchChoice
