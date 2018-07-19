@@ -25,6 +25,18 @@ To get Times-of-Arrival (TOAs), run the following command in the terminal:
 python main.py -f [text files containing directories and / or files] -t [frequency band] --temp [full path to template]
 ```
 
+Text files should just contain directories (ending in a "/") or files (ending in a ".???"). E.g. `input.txt`:
+
+```
+/Users/User1/Pulsars/directory1/
+/Users/User2/PSRs/directory/
+/Users/User1/Pulsars/directory2/file1.fits
+/Users/User1/Pulsars/directory2/file2.fits
+/Users/User2/otherPSRs/profile.fits
+```
+
+Directories / files inside the text file need not be in any particular order.
+
 **Templates**
 
 To create templates, create a file (or run from a python terminal shell) and initialize the Template class with the frequency band required (as a string) and the directories (also as strings).
