@@ -65,13 +65,19 @@ class ArgumentHandler:
         Initializes argparse and collects the command line arguments.
         Returns a list of input arguments.
         """
-        parser = argparse.ArgumentParser(
-             prog = progname,
-             description = 'Test' )
 
-        parser.add_argument( '-f', '--file', dest = 'textFile', nargs = '*', default = None, help = 'Test' )
-        parser.add_argument( '-t', '--time', dest = 'timingFlag', nargs = 1, default = False, help = 'Test2' )
-        parser.add_argument( '--temp', dest = 'tempFlag', nargs = 1, help = 'Test3' )
+        parser = argparse.ArgumentParser( formatter_class = argparse.RawDescriptionHelpFormatter,
+                    prog = progname,
+                    description = '''\
+                         PulseBlast Argument Handler
+                    -------------------------------------
+                       Argument handler for PulseBlast
+                                 arguments.
+                        ''' )
+
+        parser.add_argument( '-f', '--file', dest = 'textFile', nargs = '*', default = None, help = 'Text file flag. Optional. Accepts as many txt files as necessary. Files can contain a mixture of directories and filenames.' )
+        parser.add_argument( '-t', '--time', dest = 'timingFlag', nargs = 1, default = False, help = 'Timing flag. Required. Argument after flag takes the frequency band (to be improved).' )
+        parser.add_argument( '--temp', dest = 'tempFlag', nargs = 1, help = 'Template flag. Required. Argument after flag takes the full path for the template profile.' )
 
         args = parser.parse_args()
 
