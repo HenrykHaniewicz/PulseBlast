@@ -24,7 +24,7 @@ Requires:
 Python 3.X  
 
 PyPulse  
-Numpy v1.14.2  
-Scipy v1.0.1  
-Astropy v3.0.1  
+Numpy v1.14.5  
+Scipy v1.1.0  
+Astropy v3.0.3  
 Matplotlib v2.2.2
