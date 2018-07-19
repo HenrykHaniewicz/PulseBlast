@@ -1,6 +1,22 @@
 # PulseBlast
 Basic python package to work with creating pulsar templates and radio frequency interference excision.
 
+**Mac Setup:**
+
+After cloning both PulseBlast and PyPulse (as needed), add PulseBlast and PyPulse to your PYTHONPATH in .bashrc as follows:
+
+```bash
+export PYTHONPATH=[directory_for_python3]:[directory_for_pypulse]:[directory_for_pulseblast]:$PYTHONPATH
+```
+
+and add an update check in .bash_profile (if not already set up):
+
+```bash
+test -f ~/.bashrc && source ~/.bashrc
+```
+
+**Usage:**
+
 To do timing, run the following command in the terminal:
 
 ```bash
@@ -19,7 +35,7 @@ Once the class is initialized, run
 templateobject.createTemplate( filename_to_save, directory_to_save_to )
 ```
 
-Requires:  
+**Requires:**  
 
 Python 3.X  
 
