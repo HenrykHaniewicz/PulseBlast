@@ -1,11 +1,13 @@
 # Timing class
 # Henryk T. Haniewicz, 2018
 
+# Local imports
+from DataCulling import DataCull
 
 # Other imports
 import os
 from astropy.io import fits
-from DataCulling import DataCull
+from custom_exceptions import *
 
 
 # Timing class
@@ -191,9 +193,3 @@ class Timing:
 
         else:
             print( "{} is not a fits file...".format( self.file ) )
-
-
-class ArgumentError( Exception ):
-
-    def __init__( self, message ):
-        self.message = message
