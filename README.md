@@ -19,7 +19,7 @@ test -f ~/.bashrc && source ~/.bashrc
 
 To do timing, run the following command in the terminal:
 
-```bash
+```shell
 python main.py -f [text files containing directories and / or files] -t [frequency band] --temp [full path to template]
 ```
 
