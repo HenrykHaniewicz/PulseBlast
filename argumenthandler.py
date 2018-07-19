@@ -2,7 +2,7 @@
 
 # PulseBlast imports
 from PSRTiming import Timing
-from PSRTiming import ArgumentError
+from custom_exceptions import *
 
 # Other imports
 import argparse
