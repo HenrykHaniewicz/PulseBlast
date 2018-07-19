@@ -173,7 +173,7 @@ class Template:
         # Parse the template's filename into a string
         directory = str( dir )
         filename = str( tempname )
-        print( "Attempting to delete: {}...".format( filename ) )
+        print( "Attempting to delete: {}{}".format( directory, filename ) )
 
         # Split the filename up into a root and extension
         root, ext = os.path.splitext( filename )
