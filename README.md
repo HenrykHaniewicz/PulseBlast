@@ -7,16 +7,16 @@ To do timing, run the following command in the terminal:
 python main.py -f [text files containing directories and / or files] -t [frequency band] --temp [full path to template]
 ```
 
-To create templates, create a file and initialize the class as follows:
+To create templates, create a file and initialize the Template class. Each directory being used should be separated by a comma. e.g.:
 
 ```python
-Template( directories )
+templateobject = Template( directory1, directory2, directory3 )
 ```
 
-Each directory being used should be separated by a comma. e.g.:
+Once the class is initialized, run
 
 ```python
-Template( directory1, directory2, directory3 )
+templateobject.createTemplate( filename_to_save, directory_to_save_to )
 ```
 
 Requires:  
