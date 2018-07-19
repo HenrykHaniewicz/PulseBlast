@@ -4,8 +4,10 @@
 # System imports
 import os
 
+# PyPulse imports
+from pypulse.archive import Archive
+
 # Other imports
-from DataCulling import DataCull
 import numpy as np
 from astropy.io import fits
 
@@ -20,28 +22,24 @@ class Template:
     choosing.
     '''
 
-    def __init__( self, directory = None ):
+    def __init__( self, *args ):
 
-        # Check if the directory was supplied by the user. If not, use current working directory.
-        if directory == None:
-            self.directory = str( os.getcwd() )
-        else:
-            self.directory = str( directory )
+        self.args = args
 
     def __repr__( self ):
-        return "Template( directory = {} )".format( self.directory )
+        return "Template( directories = {} )".format( self.args )
 
     def __str__( self ):
-        return self.directory
+        return self.args
 
 
     def _loadArchive( self ):
 
         '''
-        Loads the archive from the DataCull class and initializes the main parameters.
+        Loads the archive from the PyPulse Archive class and initializes the main parameters.
         '''
 
-        loadedArchive = DataCull( self.file, self.directory, 0 )
+        loadedArchive = Archive( self.directory + self.file, verbose = False )
 
         return loadedArchive
 
@@ -54,18 +52,18 @@ class Template:
         createTemplate method.
         '''
 
-        # Load the archive using DataCull for convenience
+        # Load the archive
         archive = self._loadArchive()
 
         # Initialize the template if this is the first call
         if self._templateCreationScriptL.counter == 0:
-            self.templateProfileL = np.zeros( archive.ar.getNbin(), dtype = float )
+            self.templateProfileL = np.zeros( archive.getNbin(), dtype = float )
             self._templateCreationScriptL.__func__.counter += 1
 
         # Iterate through each subint and channel to add each profile together
-        for time in np.arange( archive.ar.getNsubint() ):
-            for frequency in np.arange( archive.ar.getNchan() ):
-                self.templateProfileL += archive.data[time][frequency]
+        for time in np.arange( archive.getNsubint() ):
+            for frequency in np.arange( archive.getNchan() ):
+                self.templateProfileL += archive.getData()[time][frequency]
 
         return self.templateProfileL
 
@@ -78,18 +76,18 @@ class Template:
         createTemplate method.
         '''
 
-        # Load the archive using DataCull for convenience
-        archive = self.loadArchive()
+        # Load the archive
+        archive = self._loadArchive()
 
         # Initialize the template if this is the first call
         if self._templateCreationScript430.counter == 0:
-            self.templateProfile430 = np.zeros( archive.ar.getNbin(), dtype = float )
+            self.templateProfile430 = np.zeros( archive.getNbin(), dtype = float )
             self._templateCreationScript430.__func__.counter += 1
 
         # Iterate through each subint and channel to add each profile together
-        for time in np.arange( archive.ar.getNsubint() ):
-            for frequency in np.arange( archive.ar.getNchan() ):
-                self.templateProfile430 += archive.data[time][frequency]
+        for time in np.arange( archive.getNsubint() ):
+            for frequency in np.arange( archive.getNchan() ):
+                self.templateProfile430 += archive.getData()[time][frequency]
 
         return self.templateProfile430
 
@@ -122,62 +120,74 @@ class Template:
         self._templateCreationScript430.__func__.counter = 0
         self._templateCreationScriptL.__func__.counter = 0
 
-        # Cycle through each file in the stored directory
-        for file in os.listdir( self.directory ):
-            # Set the file to be a global variable in the class for use elsewhere
-            self.file = file
+        for i, arguments in enumerate( self.args ):
 
-            # Check whether the file is a fits file
-            if self.file.endswith( ".fits" ) or self.file.endswith( ".refold" ):
+            # Check if the directory was supplied by the user. If not, use current working directory.
+            if self.args == None:
+                self.directory = str( os.getcwd() )
+            else:
+                self.directory = str( self.args[i] )
 
-                # Check if the file is a calibration file (not included in the template)
-                if self.file.find( 'cal' ) == -1:
+            # Cycle through each file in the stored directory
+            for file in os.listdir( self.directory ):
+                # Set the file to be a global variable in the class for use elsewhere
+                self.file = file
 
-                    # Open the fits file header
-                    hdul = fits.open( self.directory + self.file )
+                # Check whether the file is a fits file
+                if self.file.endswith( ".fits" ) or self.file.endswith( ".refold" ):
 
-                    # Get the frequency band used in the observation.
-                    frequencyBand = hdul[0].header[ 'FRONTEND' ]
+                    # Check if the file is a calibration file (not included in the template)
+                    if self.file.find( 'cal' ) == -1:
 
-                    # Close the header once it's been used or the program becomes very slow.
-                    hdul.close()
+                        # Open the fits file header
+                        hdul = fits.open( self.directory + self.file )
 
-                    # Check which band the fits file belongs to
-                    if frequencyBand == 'lbw' or frequencyBand == 'L_Band':
+                        # Get the frequency band used in the observation.
+                        frequencyBand = hdul[0].header[ 'FRONTEND' ]
 
-                        if doType == 0 or doType == 1:
-                            self.templateProfileL = self._templateCreationScriptL()
+                        # Close the header once it's been used or the program becomes very slow.
+                        hdul.close()
 
-                            # Check if a save name was provided
-                            if bandNameL == None:
-                                np.save( self.directory + "Lbandtemplate.npy", self.templateProfileL )
+                        # Check which band the fits file belongs to
+                        if frequencyBand == 'lbw' or frequencyBand == 'L_Band':
+
+                            if doType == 0 or doType == 1:
+                                self.templateProfileL = self._templateCreationScriptL()
+
+                                if i == ( len( self.args ) - 1 ):
+
+                                    # Check if a save name was provided
+                                    if bandNameL == None:
+                                        np.save( self.directory + "Lbandtemplate.npy", self.templateProfileL )
+                                    else:
+                                        np.save( self.directory + nameL, self.templateProfileL )
                             else:
-                                np.save( self.directory + nameL, self.templateProfileL )
-                        else:
-                            print( "L-Band file" )
+                                print( "L-Band file" )
 
-                    elif frequencyBand == '430':
+                        elif frequencyBand == '430':
 
-                        if doType == 0 or doType == 2:
-                            self.templateProfile430 = self._templateCreationScript430()
+                            if doType == 0 or doType == 2:
+                                self.templateProfile430 = self._templateCreationScript430()
 
-                            # Check if a save name was provided
-                            if bandName430 == None:
-                                np.save( self.directory + "430bandtemplate.npy", self.templateProfile430 )
+                                if i == ( len( self.args ) - 1 ):
+
+                                    # Check if a save name was provided
+                                    if bandName430 == None:
+                                        np.save( self.directory + "430bandtemplate.npy", self.templateProfile430 )
+                                    else:
+                                        np.save( self.directory + name430, self.templateProfile430 )
                             else:
-                                np.save( self.directory + name430, self.templateProfile430 )
+                                print( "430-Band file" )
+
                         else:
-                            print( "430-Band file" )
+                            print( "Frontend is neither L-Band, nor 430-Band..." )
 
                     else:
-                        print( "Frontend is neither L-Band, nor 430-Band..." )
+                        print( "Skipping calibration file..." )
+
 
                 else:
-                    print( "Skipping calibration file..." )
-
-
-            else:
-                print( "{} is not a fits file...".format( self.file ) )
+                    print( "{} is not a fits file...".format( self.file ) )
 
         # Decide what to return based on doType
         if doType == 0:
