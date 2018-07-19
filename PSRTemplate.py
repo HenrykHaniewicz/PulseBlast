@@ -17,20 +17,23 @@ class Template:
 
     '''
     Class for the creation, handling and analysis of pulsar template profiles.
-    Templates can be created for each frequency band of data in a folder which
-    can either be the current working directory or a folder of the user's
-    choosing.
+    Templates are be created for one frequency band of data in a folder which can either be the current working directory or as many folders of the user's choosing.
     '''
 
-    def __init__( self, *args ):
+    def __init__( self, band, *args ):
 
+        '''
+        Initializes the frequency band and the directories for use elsewhere in the class.
+        '''
+
+        self.band = str( band )
         self.args = args
 
     def __repr__( self ):
-        return "Template( directories = {} )".format( self.args )
+        return "Template( frequencyBand = {}, directories = {} )".format( self.band, self.args )
 
     def __str__( self ):
-        return self.args
+        return self.band, self.args
 
 
     def _loadArchive( self ):
@@ -44,10 +47,10 @@ class Template:
         return loadedArchive
 
 
-    def _templateCreationScriptL( self ):
+    def _templateCreationScript( self ):
 
         '''
-        Script to create a template of all files in the L-band.
+        Script to create a template.
         This should not be used in isolation but is accessed through the
         createTemplate method.
         '''
@@ -56,69 +59,48 @@ class Template:
         archive = self._loadArchive()
 
         # Initialize the template if this is the first call
-        if self._templateCreationScriptL.counter == 0:
-            self.templateProfileL = np.zeros( archive.getNbin(), dtype = float )
-            self._templateCreationScriptL.__func__.counter += 1
+        if self._templateCreationScript.counter == 0:
+            self.templateProfile = np.zeros( archive.getNbin(), dtype = float )
+            self._templateCreationScript.__func__.counter += 1
 
         # Iterate through each subint and channel to add each profile together
         for time in np.arange( archive.getNsubint() ):
             for frequency in np.arange( archive.getNchan() ):
-                self.templateProfileL += archive.getData()[time][frequency]
+                self.templateProfile += archive.getData()[time][frequency]
 
-        return self.templateProfileL
-
-
-    def _templateCreationScript430( self ):
-
-        '''
-        Script to create a template of all files in the 430-band.
-        This should not be used in isolation but is accessed through the
-        createTemplate method.
-        '''
-
-        # Load the archive
-        archive = self._loadArchive()
-
-        # Initialize the template if this is the first call
-        if self._templateCreationScript430.counter == 0:
-            self.templateProfile430 = np.zeros( archive.getNbin(), dtype = float )
-            self._templateCreationScript430.__func__.counter += 1
-
-        # Iterate through each subint and channel to add each profile together
-        for time in np.arange( archive.getNsubint() ):
-            for frequency in np.arange( archive.getNchan() ):
-                self.templateProfile430 += archive.getData()[time][frequency]
-
-        return self.templateProfile430
+        return self.templateProfile
 
 
-    def createTemplate( self, doType = 0, bandNameL = None, bandName430 = None ):
+    def createTemplate( self, filename = None, saveDirectory = None ):
 
         '''
-        Loads the archive of each file in the directory using PyPulse.
-        Depending on the choice made on initialization, a template will be
-        created for one band (of the user's choosing) or all bands.
-        Templates are saved in self.directory (either CWD or whatever the user
-        wishes) as 1D numpy arrays, .npy. If arguments are not provided for the
-        template names (without the .npy suffix), default names will be used.
-
-        Useage of the doType parameter: 0 (default) does both bands and returns a tuple.
-        1 does only the L-band.
-        2 does only the 430-band.
+        Loads the archive of each file in self.directory using PyPulse.
+        Depending on the frequency band parsed at initialization, a template will be created for that frequency band, measuring it against the frontend in the fits file.
+        Templates are saved in the saveDirectory as 1D numpy arrays with default extension .npy however any extension can be specified by the user.
+        If arguments are not provided for the template name (without the .npy suffix) or directory name, a default file name and CWD will be used.
         '''
 
         print( "Beginning template creation..." )
 
-        # Initialize the file names if given
-        nameL = str( bandNameL ) + ".npy"
-        name430 = str( bandName430 ) + ".npy"
+        # Check if the filename has been provided
+        if filename != None:
+
+            # Initialize filename as a string
+            filename_in_str = str( filename )
+
+            # Split the filename up into a root and extension
+            root, ext = os.path.splitext( filename_in_str )
+
+            # If file extension does not exist, assume it is a .npy file
+            if not ext:
+                ext = '.npy'
+                filename_in_str = root + ext
 
         # Set the templates to empty arrays
-        self.templateProfile430, self.templateProfileL = [], []
+        self.templateProfile = []
 
         # Set the call counters for the creation scripts to 0
-        self._templateCreationScript430.__func__.counter = 0
-        self._templateCreationScriptL.__func__.counter = 0
+        self._templateCreationScript.__func__.counter = 0
 
         for i, arguments in enumerate( self.args ):
 
@@ -127,6 +109,9 @@ class Template:
                 self.directory = str( os.getcwd() )
             else:
                 self.directory = str( self.args[i] )
+
+            if not os.path.isdir( self.args[i] ):
+                raise NotADirectoryError( "{} is not a directory.".format( self.args[i] ) )
 
             # Cycle through each file in the stored directory
             for file in os.listdir( self.directory ):
@@ -149,68 +134,45 @@ class Template:
                         hdul.close()
 
                         # Check which band the fits file belongs to
-                        if frequencyBand == 'lbw' or frequencyBand == 'L_Band':
+                        if frequencyBand == self.band:
 
-                            if doType == 0 or doType == 1:
-                                self.templateProfileL = self._templateCreationScriptL()
-
-                                if i == ( len( self.args ) - 1 ):
-
-                                    # Check if a save name was provided
-                                    if bandNameL == None:
-                                        np.save( self.directory + "Lbandtemplate.npy", self.templateProfileL )
-                                    else:
-                                        np.save( self.directory + nameL, self.templateProfileL )
-                            else:
-                                print( "L-Band file" )
-
-                        elif frequencyBand == '430':
-
-                            if doType == 0 or doType == 2:
-                                self.templateProfile430 = self._templateCreationScript430()
-
-                                if i == ( len( self.args ) - 1 ):
-
-                                    # Check if a save name was provided
-                                    if bandName430 == None:
-                                        np.save( self.directory + "430bandtemplate.npy", self.templateProfile430 )
-                                    else:
-                                        np.save( self.directory + name430, self.templateProfile430 )
-                            else:
-                                print( "430-Band file" )
+                            self.templateProfile = self._templateCreationScript()
 
                         else:
-                            print( "Frontend is neither L-Band, nor 430-Band..." )
+                            print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frequencyBand ) )
 
                     else:
                         print( "Skipping calibration file..." )
 
-
                 else:
                     print( "{} is not a fits file...".format( self.file ) )
 
+
+            if i == ( len( self.args ) - 1 ):
+
+                # Check if a save name was provided
+                if filename == None and saveDirectory == None:
+                    np.save( os.getcwd() + "Lbandtemplate.npy", self.templateProfile )
+                elif filename == None:
+                    np.save( saveDirectory + "Lbandtemplate.npy", self.templateProfile )
+                else:
+                    np.save( saveDirectory + filename_in_str, self.templateProfile )
+
         # Decide what to return based on doType
-        if doType == 0:
-            print( "Template profiles created..." )
-            return self.templateProfileL, self.templateProfile430
-        elif doType == 1:
-            print( "L-Band template profile created..." )
-            return self.templateProfileL
-        else:
-            print( "430-Band template profile created..." )
-            return self.templateProfile430
+        print( "{}-Band template profile created...".format( self.band ) )
+        return self.templateProfile
 
 
-    def deleteTemplate( self, name ):
+    def deleteTemplate( self, dir, tempname ):
 
         '''
-        Deletes a template file name specified by the user. If the template file
-        parsed has no extension, the extension .npy will be searched for.
+        Deletes a template file specified by the user (with both directory and filename). If the template file parsed has no extension, the extension .npy will be searched for.
         Only use this if you know what you are doing as it is a delete function!
         '''
 
         # Parse the template's filename into a string
-        filename = str( name )
+        directory = str( dir )
+        filename = str( tempname )
         print( "Attempting to delete: {}...".format( filename ) )
 
         # Split the filename up into a root and extension
@@ -222,8 +184,8 @@ class Template:
             filename = root + ext
 
         # if file exists, delete it
-        if os.path.isfile( self.directory + filename ):
-            os.remove( self.directory + filename )
+        if os.path.isfile( directory + filename ):
+            os.remove( directory + filename )
             print( "{} deleted.".format( filename ) )
         else:
-            print( "Error: Template file {} not found".format( filename ) )
+            raise FileNotFoundError( "Template file {} not found".format( filename ) )
