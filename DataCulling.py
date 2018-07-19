@@ -59,8 +59,7 @@ class DataCull:
         if os.path.isfile( self.directory + filename ):
             self.filename = str( filename )
         else:
-            print( "Error: File {} not found in this directory...".format( filename ) )
-            exit()
+            raise FileNotFoundError( "File {} not found in this directory...".format( filename ) )
 
         # Load the template
         self.template = self._loadTemplate( template )
@@ -117,7 +116,7 @@ class DataCull:
             self.templateName = root + ext
 
         # Load the template
-        template = np.load( self.directory + self.templateName )
+        template = np.load( self.templateName )
 
         return template
 
