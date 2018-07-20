@@ -15,46 +15,51 @@ class Timing:
 
     '''
     Class to deal with pulsar timing including calculating TOAs, putting them into
-    TEMPO2 format, and creating fake TOAs based on user defined criteria.
+    TEMPO2 format, and creating fake TOAs for prediction models based on user defined criteria.
     '''
 
-    def __init__( self, template, input, band):
+    def __init__( self, template, input, band, nsubint ):
 
         '''
-        Initializes an instance of the class with a required template and an
-        optional directory for the template and files. If no directory is supplied,
-        the CWD will be used.
+        Initializes an instance of the class with a required template and a directory or file to time
+        as well as the frequency band as a string.
+        Also requires an argument of the number of sub-integrations to average to before timing.
         '''
-
-        # Parse directory in string or choose CWD if no directory given
 
         self.directory = str( input )
 
         self.template = str( template )
 
+        self.band = str( band )
+
+        if not isinstance( nsubint, int ):
+            raise TypeError( "nsubint argument must be an integer. Argument is currently {}".format( type( nsubint ).__name__ ) )
+        elif nsubint <= 0:
+            raise ValueError( "nsubint cannot be less than 1. Currently: {}".format( nsubint ) )
+
+        self.nsubint = nsubint
+
         if os.path.isdir( self.directory ):
-            self.getTOAs_dir( band )
+            self.getTOAs_dir()
         elif os.path.isfile( self.directory ):
-            self.getTOAs_file( band )
+            self.getTOAs_file()
         else:
-            raise OSError( "File / directory does not exist." )
+            raise OSError( "{} does not exist.".format( self.directory ) )
 
 
 
     def __repr__( self ):
-        return "Timing( template = {}, directory = {} )".format( self.template, self.directory )
+        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {} )".format( self.template, self.directory, self.band, self.nsubint )
 
     def __str__( self ):
-        return self.template, self.directory
+        return self.template, self.directory, self.band, self.subint
 
 
-    def getTOAs_dir( self, frequencyBand, save = None, exciseRFI = False ):
+    def getTOAs_dir( self, save = None, exciseRFI = False ):
 
         '''
         Calculate and return Time-of-Arrivals (TOAs) for the given directory.
-        Takes in a required argument for the frequency band (should match the template
-        band loaded in initialization). Either 'L' or '430'.
-        Each file can be chosen to undergo RFI excision before TOA calculation
+        Each file can be chosen to undergo RFI excision before TOA calculation.
         '''
 
         # Cycle through each file in the stored directory
@@ -87,33 +92,16 @@ class Timing:
                         cullObject.reject( 'chauvenet', 15, True )
 
                     # Check which band the fits file belongs to
-                    if frequencyBand == 'L':
+                    if frontend == self.band:
 
-                        if frontend == 'lbw' or frontend == 'L_Band':
+                        cullObject.ar.tscrunch( nsubint = self.nsubint )
+                        cullObject.ar.fscrunch( nchan = 1 )
 
-                            cullObject.ar.tscrunch( nsubint = 6 )
-                            cullObject.ar.fscrunch( nchan = 1 )
-
-                            cullObject.ar.time( cullObject.template, filename = save, MJD = True )
-
-                        else:
-                            print( "430 band file" )
-
-                    elif frequencyBand == '430':
-
-                        if frontend == '430':
-
-                            cullObject.ar.tscrunch( nsubint = 2 )
-                            cullObject.ar.fscrunch( nchan = 1 )
-
-                            cullObject.ar.time( cullObject.template, filename = save, MJD = True )
-
-                        else:
-                            print( "L-Band file" )
+                        cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 
 
                     else:
-                        raise ValueError( "Frontend provided is neither 'L' nor '430'" )
+                        print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
 
                 else:
                     print( "Skipping calibration file..." )
@@ -123,13 +111,11 @@ class Timing:
                 print( "{} is not a fits file...".format( self.file ) )
 
 
-    def getTOAs_file( self, frequencyBand, save = None, exciseRFI = False ):
+    def getTOAs_file( self, save = None, exciseRFI = False ):
 
         '''
-        Calculate and return Time-of-Arrivals (TOAs) for the given directory.
-        Takes in a required argument for the frequency band (should match the template
-        band loaded in initialization). Either 'L' or '430'.
-        Each file can be chosen to undergo RFI excision before TOA calculation
+        Calculate and return Time-of-Arrivals (TOAs) for the given file.
+        Each file can be chosen to undergo RFI excision before TOA calculation.
         '''
 
 
@@ -159,33 +145,16 @@ class Timing:
                     cullObject.reject( 'chauvenet', 15, True )
 
                 # Check which band the fits file belongs to
-                if frequencyBand == 'L':
+                if frontend == self.band:
 
-                    if frontend == 'lbw' or frontend == 'L_Band':
+                    cullObject.ar.tscrunch( nsubint = self.nsubint )
+                    cullObject.ar.fscrunch( nchan = 1 )
 
-                        cullObject.ar.tscrunch( nsubint = 6 )
-                        cullObject.ar.fscrunch( nchan = 1 )
-
-                        cullObject.ar.time( cullObject.template, filename = save, MJD = True )
-
-                    else:
-                        print( "430 band file" )
-
-                elif frequencyBand == '430':
-
-                    if frontend == '430':
-
-                        cullObject.ar.tscrunch( nsubint = 2 )
-                        cullObject.ar.fscrunch( nchan = 1 )
-
-                        cullObject.ar.time( cullObject.template, filename = save, MJD = True )
-
-                    else:
-                        print( "L-Band file" )
+                    cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 
 
                 else:
-                    raise ArgumentError( "Frontend provided is neither 'L' nor '430'" )
+                    print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
 
             else:
                 print( "Skipping calibration file..." )
