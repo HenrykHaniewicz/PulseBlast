@@ -25,13 +25,15 @@ class ArgumentHandler:
             raise ArgumentError( "Timing argument (-t / --time) required." )
         if ( not args.tempFlag ):
             raise ArgumentError( "Template argument (--temp) not initialized." )
+        if ( not args.subintFlag ):
+            raise ArgumentError( "Sub-integration argument (-s / --subint) required." )
 
         if ( not args.textFile ):
 
              directory_in_str = str( os.getcwd() )
 
              for file in os.listdir( directory_in_str ):
-                self.timing( file, args.timingFlag[0], args.tempFlag[0] )
+                self.timing( file, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0] )
 
 
         else:
@@ -46,7 +48,7 @@ class ArgumentHandler:
 
                         line = line.replace( "\n", "" )
 
-                        self.timing( line, args.timingFlag[0], args.tempFlag[0] )
+                        self.timing( line, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0] )
 
                     currentFile.close()
 
@@ -78,16 +80,17 @@ class ArgumentHandler:
         parser.add_argument( '-f', '--file', dest = 'textFile', nargs = '*', default = None, help = 'Text file flag. Optional. Accepts as many txt files as necessary. Files can contain a mixture of directories and filenames.' )
         parser.add_argument( '-t', '--time', dest = 'timingFlag', nargs = 1, default = False, help = 'Timing flag. Required. Argument after flag takes the frequency band (to be improved).' )
         parser.add_argument( '--temp', dest = 'tempFlag', nargs = 1, help = 'Template flag. Required. Argument after flag takes the full path for the template profile.' )
+        parser.add_argument( '-s', '--subint', dest = 'subintFlag', nargs = 1, type = int, help = 'Sub-integration scrunch flag. Required. Argument after flag takes an integer greater than 0.' )
 
         args = parser.parse_args()
 
         return args
 
 
-    def timing( self, input, band, temp ):
+    def timing( self, input, band, temp, nsubint ):
 
         """
         Calls an instance of the Timing class.
         """
 
-        timingObject = Timing( temp, input, band )
+        timingObject = Timing( temp, input, band, nsubint )
