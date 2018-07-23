@@ -154,7 +154,7 @@ class Timing:
                     hdul = fits.open( self.directory + self.file )
                 except OSError:
                     print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
-                    continue
+                    pass
 
                 # Get the frequency band used in the observation.
                 frontend = hdul[0].header[ 'FRONTEND' ]
