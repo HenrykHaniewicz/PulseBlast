@@ -1,15 +1,15 @@
-# Pulsar Template Class, Python 3
+# Pulsar Template class, Python 3
 # Henryk T. Haniewicz, 2018
-
-# System imports
-import os
 
 # PyPulse imports
 from pypulse.archive import Archive
 
 # Other imports
+import os
+import sys
 import numpy as np
 from astropy.io import fits
+import magic
 
 
 # Template class
@@ -26,11 +26,12 @@ class Template:
         Initializes the frequency band and the directories for use elsewhere in the class.
         '''
 
+        # Here 'args' refers to a list of directories supplied by the user
         self.band = str( band )
         self.args = args
 
     def __repr__( self ):
-        return "Template( frequencyBand = {}, directories = {} )".format( self.band, self.args )
+        return "Template( frequency_band = {}, directories = {} )".format( self.band, self.args )
 
     def __str__( self ):
         return self.band, self.args
@@ -116,30 +117,38 @@ class Template:
             # Cycle through each file in the stored directory
             for file in os.listdir( self.directory ):
                 # Set the file to be a global variable in the class for use elsewhere
-                self.file = file
+                self.file = str( file )
 
-                # Check whether the file is a fits file
-                if self.file.endswith( ".fits" ) or self.file.endswith( ".refold" ):
+                # Get the ASCII signature of the file header
+                with magic.Magic() as m:
+                    format = m.id_filename( self.directory + self.file )
+
+                # Check whether the file is a fits file using the header signature
+                if format.find( "FITS image data, 8-bit, character or unsigned binary integer" ) == 0:
 
                     # Check if the file is a calibration file (not included in the template)
                     if self.file.find( 'cal' ) == -1:
 
                         # Open the fits file header
-                        hdul = fits.open( self.directory + self.file )
+                        try:
+                            hdul = fits.open( self.directory + self.file )
+                        except OSError:
+                            print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
+                            continue
 
                         # Get the frequency band used in the observation.
-                        frequencyBand = hdul[0].header[ 'FRONTEND' ]
+                        frontend = hdul[0].header[ 'FRONTEND' ]
 
                         # Close the header once it's been used or the program becomes very slow.
                         hdul.close()
 
                         # Check which band the fits file belongs to
-                        if frequencyBand == self.band:
+                        if frontend == self.band:
 
                             self.templateProfile = self._templateCreationScript()
 
                         else:
-                            print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frequencyBand ) )
+                            print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
 
                     else:
                         print( "Skipping calibration file..." )
@@ -148,9 +157,10 @@ class Template:
                     print( "{} is not a fits file...".format( self.file ) )
 
 
+            # Check if this is the last directory in the list
             if i == ( len( self.args ) - 1 ):
 
-                # Check if a save name was provided
+                # Check if a save name was provided and save as appropriate
                 if filename == None and saveDirectory == None:
                     np.save( os.getcwd() + "Lbandtemplate.npy", self.templateProfile )
                 elif filename == None:
@@ -159,20 +169,24 @@ class Template:
                     np.save( saveDirectory + filename_in_str, self.templateProfile )
 
         # Decide what to return based on doType
-        print( "{}-Band template profile created...".format( self.band ) )
+        print( "{} template profile created...".format( self.band ) )
         return self.templateProfile
 
 
     def deleteTemplate( self, dir, tempname ):
 
         '''
-        Deletes a template file specified by the user (with both directory and filename). If the template file parsed has no extension, the extension .npy will be searched for.
+        Deletes a template file specified by the user (with both directory and filename as strings). If the template file parsed has no extension, the extension .npy will be searched for.
         Only use this if you know what you are doing as it is a delete function!
         '''
 
-        # Parse the template's filename into a string
-        directory = str( dir )
+        # Parse the template's filename and directory into a string
+        directory = str( dir + "/" )
         filename = str( tempname )
+
+        # Ask user if they REALLY want to delete it
+        if not input( "Are you sure you wish to delete {}{}? (y/n): ".format( directory, filename ) ).lower().strip()[:1] == "y": sys.exit(1)
+
         print( "Attempting to delete: {}{}".format( directory, filename ) )
 
         # Split the filename up into a root and extension
@@ -183,9 +197,9 @@ class Template:
             ext = '.npy'
             filename = root + ext
 
-        # if file exists, delete it
+        # if file exists, delete it. If not, raise FileNotFoundError
         if os.path.isfile( directory + filename ):
             os.remove( directory + filename )
             print( "{} deleted.".format( filename ) )
         else:
-            raise FileNotFoundError( "Template file {} not found".format( filename ) )
+            raise FileNotFoundError( "Template file {} not found in {}".format( filename, directory ) )
