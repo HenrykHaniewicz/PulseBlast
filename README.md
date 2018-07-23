@@ -64,5 +64,5 @@ PyPulse
 Numpy v1.14.5  
 Scipy v1.1.0  
 Astropy v3.0.3  
-Matplotlib v2.2.2
+Matplotlib v2.2.2  
 Filemagic v1.6
