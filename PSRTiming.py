@@ -1,13 +1,14 @@
-# Timing class
+# Timing class, Python 3
 # Henryk T. Haniewicz, 2018
 
 # Local imports
 from DataCulling import DataCull
+from custom_exceptions import *
 
 # Other imports
 import os
 from astropy.io import fits
-from custom_exceptions import *
+import magic
 
 
 # Timing class
@@ -26,6 +27,7 @@ class Timing:
         Also requires an argument of the number of sub-integrations to average to before timing.
         '''
 
+        # Initialize all parsed parameters as strings. Check for validity of nsubint (in case argparse doesn't)
         self.directory = str( input )
 
         self.template = str( template )
@@ -39,6 +41,7 @@ class Timing:
 
         self.nsubint = nsubint
 
+        # Determine which version of getTOAs is needed (likely to change)
         if os.path.isdir( self.directory ):
             self.getTOAs_dir()
         elif os.path.isfile( self.directory ):
@@ -68,14 +71,22 @@ class Timing:
             # Set the file to be a global variable in the class for use elsewhere
             self.file = file
 
-            # Check whether the file is a fits file
-            if self.file.endswith( ".fits" ) or self.file.endswith( ".refold" ):
+            # Get the ASCII signature of the file header
+            with magic.Magic() as m:
+                format = m.id_filename( self.directory + self.file )
 
-                # Check if the file is a calibration file (not included in the template)
+            # Check whether the file is a fits file using the header signature
+            if format.find( "FITS image data, 8-bit, character or unsigned binary integer" ) == 0:
+
+                # Check if the file is a calibration file and skip if it is
                 if self.file.find( 'cal' ) == -1:
 
                     # Open the fits file header
-                    hdul = fits.open( self.directory + self.file )
+                    try:
+                        hdul = fits.open( self.directory + self.file )
+                    except OSError:
+                        print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
+                        continue
 
                     # Get the frequency band used in the observation.
                     frontend = hdul[0].header[ 'FRONTEND' ]
@@ -83,20 +94,24 @@ class Timing:
                     # Close the header once it's been used or the program becomes very slow.
                     hdul.close()
 
+                    # Create an object of the DataCull type
                     cullObject = DataCull( self.file, self.template, self.directory, printFull = False )
 
                     if cullObject.SNError:
                         continue
 
+                    # If enabled, perform a standard RFI cull
                     if exciseRFI:
                         cullObject.reject( 'chauvenet', 15, True )
 
-                    # Check which band the fits file belongs to
+                    # Check if the band provided matches that in the header
                     if frontend == self.band:
 
+                        # Scrunch factors. For TOAs, nchan should be 1 and nsubint is defined in class initialization
                         cullObject.ar.tscrunch( nsubint = self.nsubint )
                         cullObject.ar.fscrunch( nchan = 1 )
 
+                        # Function to return the TOAs
                         cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 
 
@@ -118,17 +133,28 @@ class Timing:
         Each file can be chosen to undergo RFI excision before TOA calculation.
         '''
 
-
+        # Temporary wizardry that requires explaination:
+        # self.directory, as it's parsed in is actually the directory + file, so this splits everything up and re-assigns self.directory as the directory
         self.directory, self.file = os.path.split( self.directory )
+        # But wait! self.directory above has no end "/" so we add one in
+        self.directory = self.directory + "/"
 
-        # Check whether the file is a fits file
-        if self.file.endswith( ".fits" ) or self.file.endswith( ".refold" ):
+        # Get the ASCII signature of the file header
+        with magic.Magic() as m:
+            format = m.id_filename( self.directory + self.file )
+
+        # Check whether the file is a fits file using the header signature
+        if format.find( "FITS image data, 8-bit, character or unsigned binary integer" ) == 0:
 
             # Check if the file is a calibration file (not included in the template)
             if self.file.find( 'cal' ) == -1:
 
                 # Open the fits file header
-                hdul = fits.open( self.directory + "/" + self.file )
+                try:
+                    hdul = fits.open( self.directory + self.file )
+                except OSError:
+                    print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
+                    continue
 
                 # Get the frequency band used in the observation.
                 frontend = hdul[0].header[ 'FRONTEND' ]
@@ -136,20 +162,24 @@ class Timing:
                 # Close the header once it's been used or the program becomes very slow.
                 hdul.close()
 
-                cullObject = DataCull( self.file, self.template, self.directory + "/", printFull = False )
+                # Create an object of the DataCull type
+                cullObject = DataCull( self.file, self.template, self.directory, printFull = False )
 
                 if cullObject.SNError:
                     pass
 
+                # If enabled, perform a standard RFI cull
                 if exciseRFI:
                     cullObject.reject( 'chauvenet', 15, True )
 
-                # Check which band the fits file belongs to
+                # Check if the band provided matches that in the header
                 if frontend == self.band:
 
+                    # Scrunch factors. For TOAs, nchan should be 1 and nsubint is defined in class initialization
                     cullObject.ar.tscrunch( nsubint = self.nsubint )
                     cullObject.ar.fscrunch( nchan = 1 )
 
+                    # Function to return TOAs
                     cullObject.ar.time( cullObject.template, filename = save, MJD = True )
 
 
