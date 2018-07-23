@@ -1,6 +1,7 @@
-# Re-structure
+# Command-line argument handler, Python 3
+# Henryk T. Haniewicz, 2018
 
-# PulseBlast imports
+# Local imports
 from PSRTiming import Timing
 from custom_exceptions import *
 
