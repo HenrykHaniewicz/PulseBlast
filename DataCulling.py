@@ -1,5 +1,9 @@
-# Data Culling Class, Python 3
+# Data Culling class, Python 3
 # Henryk T. Haniewicz, 2018
+
+# Local imports
+import mathUtils
+import otherUtilities as utils
 
 # PyPulse imports
 from pypulse.archive import Archive
@@ -15,8 +19,6 @@ import scipy.optimize as opt
 import numpy as np
 import math
 import os
-import mathUtils
-import otherUtilities as utils
 
 # Filter various annoying warnings (such as "cannot perform >= np.nan"). We know already...
 import warnings
