@@ -41,7 +41,7 @@ TOAs will be printed to the screen in TEMPO2 format (likely to be improved in th
 
 **Templates**
 
-To create templates, create a file (or run from a python terminal shell) and initialize the Template class with the frequency band required (as a string) and the directories (also as strings).
+To create templates, create a file (or run from a python terminal shell) and initialize the Template class with the frequency band required (as a string) and the directories (also as strings).  
 Each directory being used should be separated by a comma. e.g.:
 
 ```python
@@ -55,6 +55,15 @@ Once the class is initialized, run
 ```python
 templateobject.createTemplate( filename_to_save, directory_to_save_to )
 ```
+
+If you need to delete a template in your code, you can run the `deleteTemplate()` method which takes in a required filename and directory where the template can be found.  
+The syntax is as follows:
+
+```python
+templateObject.deleteTemplate( filename_of_template, full_path_to_directory )
+```
+
+**Warning**: The `deleteTemplate()` method *can* be used to delete anything so please use with care. The program will also warn the user before deleting.
 
 ## **Requires:**  
 
