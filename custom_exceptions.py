@@ -1,4 +1,4 @@
-# Custom exceptions file.
+# Custom exceptions file
 # Add exceptions as necessary
 
 class ArgumentError( Exception ):
