@@ -18,10 +18,13 @@ class ArgumentHandler:
         Initializes command line arguments and error checks.
         """
 
+        # Initialize the program name
         self.progname = progname
 
+        # Calls the  parser method in this class
         args = self.parser( progname )
 
+        # Checks argument requirements for non-optional flags (as a double check)
         if ( not args.timingFlag ):
             raise ArgumentError( "Timing argument (-t / --time) required." )
         if ( not args.tempFlag ):
@@ -29,6 +32,7 @@ class ArgumentHandler:
         if ( not args.subintFlag ):
             raise ArgumentError( "Sub-integration argument (-s / --subint) required." )
 
+        # textFile is optional. If no -f flag is provided, uses CWD
         if ( not args.textFile ):
 
              directory_in_str = str( os.getcwd() )
@@ -39,16 +43,20 @@ class ArgumentHandler:
 
         else:
 
+            # If -f has been provided:
             for argument in args.textFile:
 
+                    # Opens and separates the file into its lines
                     currentFile = open( argument, "r" )
-
                     loadedFile = currentFile.readlines()
 
+                    # Read the lines in the file one by one
                     for line in loadedFile:
 
+                        # Removes the 'new line' character introduced via readlines()
                         line = line.replace( "\n", "" )
 
+                        # Calculates the TOAs
                         self.timing( line, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0] )
 
                     currentFile.close()
@@ -69,6 +77,7 @@ class ArgumentHandler:
         Returns a list of input arguments.
         """
 
+        # Initialize the parser
         parser = argparse.ArgumentParser( formatter_class = argparse.RawDescriptionHelpFormatter,
                     prog = progname,
                     description = '''\
@@ -78,6 +87,7 @@ class ArgumentHandler:
                                  arguments.
                         ''' )
 
+        # Arguments list
         parser.add_argument( '-f', '--file', dest = 'textFile', nargs = '*', default = None, help = 'Text file flag. Optional. Accepts as many txt files as necessary. Files can contain a mixture of directories and filenames.' )
         parser.add_argument( '-t', '--time', dest = 'timingFlag', nargs = 1, default = False, help = 'Timing flag. Required. Argument after flag takes the frequency band (to be improved).' )
         parser.add_argument( '--temp', dest = 'tempFlag', nargs = 1, help = 'Template flag. Required. Argument after flag takes the full path for the template profile.' )
