@@ -22,10 +22,10 @@ test -f ~/.bashrc && source ~/.bashrc
 To get Times-of-Arrival (TOAs), run the following command in the terminal:
 
 ```shell
-python main.py -f [text files containing directories and / or files] -t [frequency band] --temp [full path to template] -s [sub-integrations to scrunch to]
+python main.py -x [text files containing directories and / or files] -t [frequency band] --temp [full path to template] -s [sub-integrations to scrunch to] -j [jump_after_fluxerr] -od [toa_output_file_directory] -o [toa_output_filename]
 ```
 
-Text files should just contain directories (ending in a "/") or files (ending in a ".???"). E.g. `input.txt`:
+Text files should only contain directories (ending in a "/") or files (ending in a ".???"). E.g. `input.txt`:
 
 ```
 /Users/User1/Pulsars/directory1/
@@ -37,7 +37,7 @@ Text files should just contain directories (ending in a "/") or files (ending in
 
 Directories / files inside the text file need not be in any particular order.
 
-TOAs will be printed to the screen in TEMPO2 format (likely to be improved in the near future).
+TOAs will be printed to the screen in TEMPO2 format however, currently, the telescope name *will* need to be changed by the user to the newly used TEMPO2 codes until I can figure out how to implement this.
 
 **Templates**
 
