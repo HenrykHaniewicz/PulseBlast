@@ -37,7 +37,7 @@ Text files should only contain directories (ending in a "/") or files (ending in
 
 Directories / files inside the text file need not be in any particular order.
 
-TOAs will be printed to the screen in TEMPO2 format however, currently, the telescope name *will* need to be changed by the user to the newly used TEMPO2 codes until I can figure out how to implement this.
+TOAs will be saved in TEMPO2 format to the save file path and filename given however, currently, the telescope name *will* need to be changed by the user to the newly used TEMPO2 codes until I can figure out how to implement this. If no output file path is given, current working directory will be used. If no filename is supplied, a default filename, `PSR_TOAs.toa`, will be used.
 
 **Templates**
 
