@@ -19,7 +19,7 @@ class Timing:
     TEMPO2 format, and creating fake TOAs for prediction models based on user defined criteria.
     '''
 
-    def __init__( self, template, input, band, nsubint ):
+    def __init__( self, template, input, band, nsubint, jump = None ):
 
         '''
         Initializes an instance of the class with a required template and a directory or file to time
@@ -34,6 +34,13 @@ class Timing:
 
         self.band = str( band )
 
+        # Check if a post-TOA jump was provided
+        if not jump:
+            self.jump = None
+        else:
+            self.jump = str( jump )
+
+        # Check if nsubint is an integer
         if not isinstance( nsubint, int ):
             raise TypeError( "nsubint argument must be an integer. Argument is currently {}".format( type( nsubint ).__name__ ) )
         elif nsubint <= 0:
@@ -52,10 +59,10 @@ class Timing:
 
 
     def __repr__( self ):
-        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {} )".format( self.template, self.directory, self.band, self.nsubint )
+        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {}, jump = {} )".format( self.template, self.directory, self.band, self.nsubint, self.jump )
 
     def __str__( self ):
-        return self.template, self.directory, self.band, self.subint
+        return self.template, self.directory, self.band, self.subint, self.jump
 
 
     def getTOAs_dir( self, save = None, exciseRFI = False ):
@@ -112,7 +119,7 @@ class Timing:
                         cullObject.ar.fscrunch( nchan = 1 )
 
                         # Function to return the TOAs
-                        cullObject.ar.time( cullObject.template, filename = save, MJD = True )
+                        cullObject.ar.time( cullObject.template, filename = save, MJD = True, jump = self.jump )
 
 
                     else:
@@ -180,7 +187,7 @@ class Timing:
                     cullObject.ar.fscrunch( nchan = 1 )
 
                     # Function to return TOAs
-                    cullObject.ar.time( cullObject.template, filename = save, MJD = True )
+                    cullObject.ar.time( cullObject.template, filename = save, MJD = True, jump = self.jump )
 
 
                 else:
