@@ -33,7 +33,7 @@ class ArgumentHandler:
             raise ArgumentError( "Sub-integration argument (-s / --subint) required." )
 
         # Basically, if the jumpFlag isn't set, initialize it as a NoneType 1x1 array
-        if args.jumpFlag == None:
+        if args.jumpFlag is None:
             args.jumpFlag = [ None ]
 
         # textFile is optional. If no -f flag is provided, uses CWD
@@ -42,7 +42,7 @@ class ArgumentHandler:
              directory_in_str = str( os.getcwd() )
 
              for file in os.listdir( directory_in_str ):
-                self.timing( file, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0] )
+                self.timing( file, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0], args.outputDirFlag, args.outputFlag )
 
 
         else:
@@ -61,7 +61,7 @@ class ArgumentHandler:
                         line = line.replace( "\n", "" )
 
                         # Calculates the TOAs
-                        self.timing( line, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0] )
+                        self.timing( line, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0], args.outputDirFlag, args.outputFlag )
 
                     currentFile.close()
 
@@ -97,16 +97,19 @@ class ArgumentHandler:
         parser.add_argument( '--temp', dest = 'tempFlag', nargs = 1, required = True, help = 'Template flag. Required. Argument after flag takes the full path for the template profile.' )
         parser.add_argument( '-s', '--subint', dest = 'subintFlag', nargs = 1, type = int, required = True, help = 'Sub-integration scrunch flag. Required. Argument after flag takes an integer greater than 0.' )
         parser.add_argument( '-j', '--jump', dest = 'jumpFlag', nargs = '*', default = None, help = 'Jump flag. Optional. Argument takes a string that should correspond to a jump (or other) flag needed on the end of the TOAs.' )
+        parser.add_argument( '-od', '--odir', dest = 'outputDirFlag', nargs = '?', default = None, help = 'TOA output directory. Optional. Argument takes a directory to save the TOA file to.' )
+        parser.add_argument( '-o', '--output', dest = 'outputFlag', nargs = '?', default = None, help = 'TOA output filename. Optional. Argument takes the filename to save the TOAs to. Without, a default name is used.' )
+
 
         args = parser.parse_args()
 
         return args
 
 
-    def timing( self, input, band, temp, nsubint, jump ):
+    def timing( self, input, band, temp, nsubint, jump, saveDir, saveFile ):
 
         """
         Calls an instance of the Timing class.
         """
 
-        timingObject = Timing( temp, input, band, nsubint, jump )
+        timingObject = Timing( temp, input, band, nsubint, jump, saveDir, saveFile )
