@@ -109,7 +109,11 @@ class Timing:
                         continue
 
                     # Get the frequency band used in the observation.
-                    frontend = hdul[0].header[ 'FRONTEND' ]
+                    try:
+                        frontend = hdul[0].header[ 'FRONTEND' ]
+                    except OSError:
+                        print( "Could not find any frontend information in file {}".format( self.file ) )
+                        continue
 
                     # Close the header once it's been used or the program becomes very slow.
                     hdul.close()
@@ -177,7 +181,11 @@ class Timing:
                     pass
 
                 # Get the frequency band used in the observation.
-                frontend = hdul[0].header[ 'FRONTEND' ]
+                try:
+                    frontend = hdul[0].header[ 'FRONTEND' ]
+                except OSError:
+                    print( "Could not find any frontend information in file {}".format( self.file ) )
+                    pass
 
                 # Close the header once it's been used or the program becomes very slow.
                 hdul.close()
