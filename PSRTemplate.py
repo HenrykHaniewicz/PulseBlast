@@ -126,15 +126,15 @@ class Template:
                 # Check whether the file is a fits file using the header signature
                 if format.find( "FITS image data, 8-bit, character or unsigned binary integer" ) == 0:
 
-                    # Check if the file is a calibration file (not included in the template)
-                    if self.file.find( 'cal' ) == -1:
+                    # Open the fits file header
+                    try:
+                        hdul = fits.open( self.directory + self.file )
+                    except OSError:
+                        print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
+                        continue
 
-                        # Open the fits file header
-                        try:
-                            hdul = fits.open( self.directory + self.file )
-                        except OSError:
-                            print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
-                            continue
+                    # Check if the file is a calibration file and skip if it is
+                    if hdul[0].header[ 'OBS_MODE' ] == 'PSR':
 
                         # Get the frequency band used in the observation.
                         try:
@@ -154,8 +154,17 @@ class Template:
                         else:
                             print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
 
-                    else:
+                    elif hdul[0].header[ 'OBS_MODE' ] == 'CAL':
                         print( "Skipping calibration file..." )
+                        hdul.close()
+
+                    elif hdul[0].header[ 'OBS_MODE' ] == 'SEARCH':
+                        print( "Skipping search file..." )
+                        hdul.close()
+
+                    else:
+                        hdul.close()
+                        raise OSError( "OBS_MODE found in file does not match known file types. ( Expected: PSR, CAL, SEARCH. Found: {} )".format( hdul[0].header[ 'OBS_MODE' ] ) )
 
                 else:
                     print( "{} is not a fits file...".format( self.file ) )
