@@ -1,1 +1,1 @@
-from argumenthandler import ArgumentHandler; handler = ArgumentHandler( 'argumenthandler.py' )
+from argumenthandler import ArgumentHandler; ArgumentHandler( 'argumenthandler.py' )
