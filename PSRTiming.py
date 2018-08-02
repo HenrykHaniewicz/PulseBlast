@@ -22,9 +22,10 @@ class Timing:
     def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None ):
 
         '''
-        Initializes an instance of the class with a required template and a directory or file to time
-        as well as the frequency band as a string.
-        Also requires an argument of the number of sub-integrations to average to before timing.
+        Initializes an instance of the class with a required template and a directory or file (collectively known as 'input') to time
+        as well as the frequency band as a string, number of time sub-integrations to scrunch to, user defined strings (jump) at the end of
+        the TOAs, a directory to save the timing file to and the filename of that file. The jump and save locations are optional. If no save
+        directory is parsed, CWD will be used.
         '''
 
         # Initialize all parsed parameters as strings. Check for validity of nsubint (in case argparse doesn't)
@@ -105,7 +106,7 @@ class Timing:
                     print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
                     continue
 
-                # Check if the file is a calibration file and skip if it is
+                # Check if the OBS_MODE is PSR and if not, skip it
                 if hdul[0].header[ 'OBS_MODE' ] == 'PSR':
 
                     # Get the frequency band used in the observation.
@@ -136,12 +137,13 @@ class Timing:
                         cullObject.ar.fscrunch( nchan = 1 )
 
                         # Function to return the TOAs
-                        cullObject.ar.time( cullObject.template, filename = save, MJD = True, flags = self.jump )
+                        cullObject.ar.time( cullObject.template, filename = save, MJD = True, flags = self.jump, appendto = True )
 
 
                     else:
                         print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
 
+                # Potential custom handling when OBS_MODE is CAL or SEARCH
                 elif hdul[0].header[ 'OBS_MODE' ] == 'CAL':
                     print( "Skipping calibration file..." )
                     hdul.close()
@@ -150,12 +152,12 @@ class Timing:
                     print( "Skipping search file..." )
                     hdul.close()
 
+                # If none of the options are present, raise OSError
                 else:
                     hdul.close()
                     raise OSError( "OBS_MODE found in file does not match known file types. ( Expected: PSR, CAL, SEARCH. Found: {} )".format( hdul[0].header[ 'OBS_MODE' ] ) )
 
-
-
+            # If the binary signature doesn't match that of a fits file, skip completely
             else:
                 print( "{} is not a fits file...".format( self.file ) )
 
@@ -187,7 +189,7 @@ class Timing:
                 print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
                 pass
 
-            # Check if the file is a calibration file and skip if it is
+            # Check if the OBS_MODE is PSR and if not, skip it
             if hdul[0].header[ 'OBS_MODE' ] == 'PSR':
 
                 # Get the frequency band used in the observation.
@@ -218,12 +220,13 @@ class Timing:
                     cullObject.ar.fscrunch( nchan = 1 )
 
                     # Function to return TOAs
-                    cullObject.ar.time( cullObject.template, filename = self.savePath, MJD = True, flags = self.jump )
+                    cullObject.ar.time( cullObject.template, filename = self.savePath, MJD = True, flags = self.jump, appendto = True )
 
 
                 else:
                     print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
 
+            # Potential custom handling when OBS_MODE is CAL or SEARCH
             elif hdul[0].header[ 'OBS_MODE' ] == 'CAL':
                 print( "Skipping calibration file..." )
                 hdul.close()
@@ -232,10 +235,11 @@ class Timing:
                 print( "Skipping search file..." )
                 hdul.close()
 
+            # If none of the options are present, raise OSError
             else:
                 hdul.close()
                 raise OSError( "OBS_MODE found in file does not match known file types. ( Expected: PSR, CAL, SEARCH. Found: {} )".format( hdul[0].header[ 'OBS_MODE' ] ) )
 
-
+        # If the binary signature doesn't match that of a fits file, skip completely
         else:
             print( "{} is not a fits file...".format( self.file ) )

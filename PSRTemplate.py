@@ -133,7 +133,7 @@ class Template:
                         print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
                         continue
 
-                    # Check if the file is a calibration file and skip if it is
+                    # Check if the OBS_MODE is PSR and if not, skip it
                     if hdul[0].header[ 'OBS_MODE' ] == 'PSR':
 
                         # Get the frequency band used in the observation.
@@ -154,6 +154,7 @@ class Template:
                         else:
                             print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
 
+                    # Potential custom handling when OBS_MODE is CAL or SEARCH
                     elif hdul[0].header[ 'OBS_MODE' ] == 'CAL':
                         print( "Skipping calibration file..." )
                         hdul.close()
@@ -162,10 +163,11 @@ class Template:
                         print( "Skipping search file..." )
                         hdul.close()
 
+                    # If none of the options are present, raise OSError
                     else:
-                        hdul.close()
                         raise OSError( "OBS_MODE found in file does not match known file types. ( Expected: PSR, CAL, SEARCH. Found: {} )".format( hdul[0].header[ 'OBS_MODE' ] ) )
 
+                # If the binary signature doesn't match that of a fits file, skip completely
                 else:
                     print( "{} is not a fits file...".format( self.file ) )
 
