@@ -36,7 +36,7 @@ class ArgumentHandler:
         if args.jumpFlag is None:
             args.jumpFlag = [ None ]
 
-        # textFile is optional. If no -f flag is provided, uses CWD
+        # textFile is optional. If no -x flag is provided, uses CWD
         if ( not args.textFile ):
 
              directory_in_str = str( os.getcwd() )
@@ -47,7 +47,7 @@ class ArgumentHandler:
 
         else:
 
-            # If -f has been provided:
+            # If -x has been provided:
             for argument in args.textFile:
 
                     # Opens and separates the file into its lines
