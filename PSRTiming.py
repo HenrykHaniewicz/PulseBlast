@@ -120,7 +120,7 @@ class Timing:
                     hdul.close()
 
                     # Create an object of the DataCull type
-                    cullObject = DataCull( self.file, self.template, self.directory, printFull = False )
+                    cullObject = DataCull( self.file, self.template, self.directory, verbose = False )
 
                     if cullObject.SNError:
                         continue
@@ -203,7 +203,7 @@ class Timing:
                 hdul.close()
 
                 # Create an object of the DataCull type
-                cullObject = DataCull( self.file, self.template, self.directory, printFull = False )
+                cullObject = DataCull( self.file, self.template, self.directory, verbose = False )
 
                 if cullObject.SNError:
                     pass
