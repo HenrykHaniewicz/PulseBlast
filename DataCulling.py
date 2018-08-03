@@ -34,7 +34,7 @@ class DataCull:
     If no directory is given, the current working directory will be used.
     '''
 
-    def __init__( self, filename, template, directory = None, SNLim = 3000, printFull = False ):
+    def __init__( self, filename, template, directory = None, SNLim = 3000, verbose = False ):
 
         '''
         Initializes all archives and parameters in the data cube for a given file.
@@ -47,7 +47,8 @@ class DataCull:
         shorthand.
         '''
 
-        print( "Initializing DataCull object..." )
+        if verbose:
+            print( "Initializing DataCull object..." )
 
         self.SNError = False
 
@@ -66,8 +67,8 @@ class DataCull:
         # Load the template
         self.template = self._loadTemplate( template )
 
-        # Parse printFull option
-        self.printFull = printFull
+        # Parse verbose option
+        self.verbose = verbose
 
         # Parse SNLim
         self.SNLim = SNLim
@@ -76,24 +77,25 @@ class DataCull:
         self.ar = Archive( self.__str__(), verbose = False )
 
         # Togglable print options
-        if printFull == True:
+        if self.verbose:
             np.set_printoptions( threshold = np.nan )
 
         # Check if Signal / Noise is too low
         if self.ar.getSN() < SNLim:
-            print( "Signal / Noise ratio is way too low. (Below {})".format( SNLim ) )
-            print( "Data set to be thrown out..." )
+            if self.verbose:
+                print( "Signal / Noise ratio is way too low. (Below {})".format( SNLim ) )
+                print( "Data set to be thrown out..." )
             self.SNError = True
 
         # Load the data cube for the file
         self.data = self.ar.getData()
 
-        if self.SNError == False:
+        if self.verbose and not self.SNError:
             print( "{} and {} fully loaded...".format( self.filename, self.templateName ) )
 
 
     def __repr__( self ):
-        return "DataCull( filename = {}, template = {}, directory = {}, SNLim = {}, printFull = {} )".format( self.filename, self.templateName, self.directory, self.SNLim, self.printFull )
+        return "DataCull( filename = {}, template = {}, directory = {}, SNLim = {}, verbose = {} )".format( self.filename, self.templateName, self.directory, self.SNLim, self.verbose )
 
     def __str__( self ):
         return self.directory + self.filename
@@ -134,7 +136,8 @@ class DataCull:
         This is the function you should use to reject all outliers fully.
         '''
 
-        print( "Beginning data rejection for {}...".format( self.filename ) )
+        if self.verbose:
+            print( "Beginning data rejection for {}...".format( self.filename ) )
 
         # Initialize the completion flag to false
         self.rejectionCompletionFlag = False
@@ -144,13 +147,14 @@ class DataCull:
             self.rmsRejection( criterion, showPlots )
 
             # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
-            if self.rejectionCompletionFlag == True:
+            if self.rejectionCompletionFlag:
                 generation = i + 1
-                print( "RMS data rejection for {} complete after {} generations...".format( self.filename, generation ) )
+                if self.verbose:
+                    print( "RMS data rejection for {} complete after {} generations...".format( self.filename, generation ) )
                 break
 
         # If the completion flag is still false, the cycles finished before full excision
-        if self.rejectionCompletionFlag == False:
+        if self.verbose and not self.rejectionCompletionFlag:
             print( "Maximum number of iterations ({}) completed...".format( iterations ) )
 
         # Re-initialize the completion flag to false
@@ -163,11 +167,12 @@ class DataCull:
             # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
             if self.rejectionCompletionFlag == True:
                 generation = i + 1
-                print( "Bin shift data rejection for {} complete after {} generations...".format( self.filename, generation ) )
+                if self.verbose:
+                    print( "Bin shift data rejection for {} complete after {} generations...".format( self.filename, generation ) )
                 break
 
         # If the completion flag is still false, the cycles finished before full excision
-        if self.rejectionCompletionFlag == False:
+        if self.verbose and not self.rejectionCompletionFlag:
             print( "Maximum number of iterations ({}) completed...".format( iterations ) )
 
 
@@ -224,7 +229,8 @@ class DataCull:
         if( len( np.where( rejectionCriterion )[0] ) == 0 ):
             self.rejectionCompletionFlag = True
 
-        print( "Data rejection cycle complete..." )
+        if self.verbose:
+            print( "Data rejection cycle complete..." )
 
 
     def createRmsMatrix( self ):
@@ -254,7 +260,8 @@ class DataCull:
         # Mask the nan values in the array so that histogramPlot doesn't malfunction
         rmsMatrix = np.ma.array( rmsMatrix, mask = np.isnan( rmsMatrix ) )
 
-        print( "Root Mean Square matrix successfully created..." )
+        if self.verbose:
+            print( "Root Mean Square matrix successfully created..." )
 
         # Returns the masked RMS matrix
         return rmsMatrix
@@ -296,18 +303,21 @@ class DataCull:
 
         # Set the weights of potential noise in each profile to 0
         for time, frequency in zip( np.where( rejectionCriterionS )[0], np.where( rejectionCriterionS )[1] ):
-            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+            if self.verbose:
+                print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
             self.ar.setWeights( 0, t = time, f = frequency )
 
         for time, frequency in zip( np.where( rejectionCriterionE )[0], np.where( rejectionCriterionE )[1] ):
-            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+            if self.verbose:
+                print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
             self.ar.setWeights( 0, t = time, f = frequency )
 
         # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
         if len( np.where( rejectionCriterionS )[0] ) == 0 and len( np.where( rejectionCriterionE )[0] ) == 0:
             self.rejectionCompletionFlag = True
 
-        print( "Data rejection cycle complete..." )
+        if self.verbose:
+            print( "Data rejection cycle complete..." )
 
     def getBinShifts( self ):
 
@@ -315,7 +325,8 @@ class DataCull:
         Returns the bin shift and bin shift error.
         '''
 
-        print( "Getting bin shifts and errors from the template..." )
+        if self.verbose:
+            print( "Getting bin shifts and errors from the template..." )
 
         # Re-load the data cube
         self.data = self.ar.getData()
@@ -346,7 +357,8 @@ class DataCull:
                         nBinError[time][frequency] = sigma_tau
 
                     except:
-                        print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+                        if self.verbose:
+                            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
                         self.ar.setWeights( 0, t = time, f = frequency )
 
                         nBinShift[time][frequency] = np.nan
