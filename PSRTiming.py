@@ -77,10 +77,10 @@ class Timing:
 
 
     def __repr__( self ):
-        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {}, jump = {}, saveDirectory = {}, toaFile = {} )".format( self.template, self.directory, self.band, self.nsubint, self.jump, self.saveDirectory. self.toaFile )
+        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {}, jump = {}, saveDirectory = {}, toaFile = {}, verbose = {} )".format( self.template, self.directory, self.band, self.nsubint, self.jump, self.saveDirectory. self.toaFile, self.verbose )
 
     def __str__( self ):
-        return self.template, self.directory, self.band, self.subint, self.jump
+        return self.template, self.directory, self.band, self.subint, self.jump, self.saveDirectory, self.toaFile, self.verbose
 
 
     def getTOAs_dir( self, save = None, exciseRFI = False ):
@@ -91,7 +91,7 @@ class Timing:
         '''
 
         if not self.verbose:
-            sys.stdout.write( '\n {0:<7s}  {1:<7s}\n'.format( 'Files Searched', '% done' ) )
+            sys.stdout.write( '\n {0:<7s}  {1:<7s}\n'.format( 'Files', '% done' ) )
 
         # Cycle through each file in the stored directory
         for i, file in enumerate( os.listdir( self.directory ) ):
