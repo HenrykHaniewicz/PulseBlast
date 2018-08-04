@@ -4,9 +4,11 @@
 # Local imports
 from DataCulling import DataCull
 from custom_exceptions import *
+import otherUtilities as u
 
 # Other imports
 import os
+import sys
 from astropy.io import fits
 import magic
 
@@ -19,7 +21,7 @@ class Timing:
     TEMPO2 format, and creating fake TOAs for prediction models based on user defined criteria.
     '''
 
-    def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None ):
+    def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None, verbose = False ):
 
         '''
         Initializes an instance of the class with a required template and a directory or file (collectively known as 'input') to time
@@ -30,6 +32,8 @@ class Timing:
 
         # Initialize all parsed parameters as strings. Check for validity of nsubint (in case argparse doesn't)
         self.directory = str( input )
+
+        self.verbose = verbose
 
         # If a TOA save directory has been provided, initialize it. Otherwise, CWD.
         if saveDirectory is not None:
@@ -86,8 +90,11 @@ class Timing:
         Each file can be chosen to undergo RFI excision before TOA calculation.
         '''
 
+        if not self.verbose:
+            sys.stdout.write( '\n {0:<7s}  {1:<7s}\n'.format( 'Files Searched', '% done' ) )
+
         # Cycle through each file in the stored directory
-        for file in os.listdir( self.directory ):
+        for i, file in enumerate( os.listdir( self.directory ) ):
 
             # Set the file to be a global variable in the class for use elsewhere
             self.file = file
@@ -104,6 +111,7 @@ class Timing:
                     hdul = fits.open( self.directory + self.file )
                 except OSError:
                     print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
+                    u.display_status( i, len( os.listdir( self.directory ) ) )
                     continue
 
                 # Check if the OBS_MODE is PSR and if not, skip it
@@ -114,13 +122,14 @@ class Timing:
                         frontend = hdul[0].header[ 'FRONTEND' ]
                     except OSError:
                         print( "Could not find any frontend information in file {}".format( self.file ) )
+                        u.display_status( i, len( os.listdir( self.directory ) ) )
                         continue
 
                     # Close the header once it's been used or the program becomes very slow.
                     hdul.close()
 
                     # Create an object of the DataCull type
-                    cullObject = DataCull( self.file, self.template, self.directory, verbose = False )
+                    cullObject = DataCull( self.file, self.template, self.directory, verbose = self.verbose )
 
                     if cullObject.SNError:
                         continue
@@ -141,15 +150,21 @@ class Timing:
 
 
                     else:
-                        print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
+                        if self.verbose:
+                            print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
+                        else:
+                            u.display_status( i, len( os.listdir( self.directory ) ) )
+                            continue
 
                 # Potential custom handling when OBS_MODE is CAL or SEARCH
                 elif hdul[0].header[ 'OBS_MODE' ] == 'CAL':
-                    print( "Skipping calibration file..." )
+                    if self.verbose:
+                        print( "Skipping calibration file..." )
                     hdul.close()
 
                 elif hdul[0].header[ 'OBS_MODE' ] == 'SEARCH':
-                    print( "Skipping search file..." )
+                    if self.verbose:
+                        print( "Skipping search file..." )
                     hdul.close()
 
                 # If none of the options are present, raise OSError
@@ -159,7 +174,13 @@ class Timing:
 
             # If the binary signature doesn't match that of a fits file, skip completely
             else:
-                print( "{} is not a fits file...".format( self.file ) )
+                if self.verbose:
+                    print( "{} is not a fits file...".format( self.file ) )
+                else:
+                    u.display_status( i, len( os.listdir( self.directory ) ) )
+                    continue
+
+            u.display_status( i, len( os.listdir( self.directory ) ) )
 
 
     def getTOAs_file( self, save = None, exciseRFI = False ):
@@ -203,7 +224,7 @@ class Timing:
                 hdul.close()
 
                 # Create an object of the DataCull type
-                cullObject = DataCull( self.file, self.template, self.directory, verbose = False )
+                cullObject = DataCull( self.file, self.template, self.directory, verbose = self.verbose )
 
                 if cullObject.SNError:
                     pass
@@ -224,15 +245,20 @@ class Timing:
 
 
                 else:
-                    print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
+                    if self.verbose:
+                        print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
+                    else:
+                        pass
 
             # Potential custom handling when OBS_MODE is CAL or SEARCH
             elif hdul[0].header[ 'OBS_MODE' ] == 'CAL':
-                print( "Skipping calibration file..." )
+                if self.verbose:
+                    print( "Skipping calibration file..." )
                 hdul.close()
 
             elif hdul[0].header[ 'OBS_MODE' ] == 'SEARCH':
-                print( "Skipping search file..." )
+                if self.verbose:
+                    print( "Skipping search file..." )
                 hdul.close()
 
             # If none of the options are present, raise OSError
@@ -242,4 +268,7 @@ class Timing:
 
         # If the binary signature doesn't match that of a fits file, skip completely
         else:
-            print( "{} is not a fits file...".format( self.file ) )
+            if self.verbose:
+                print( "{} is not a fits file...".format( self.file ) )
+            else:
+                pass
