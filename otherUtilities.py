@@ -3,10 +3,10 @@
 # Imports
 import numpy as np
 import math
+import sys
 import mathUtils as mu
 
 # Functions
-
 
 # Routine that creates a mask (of 1s and 0s) to denote which parts of the
 # profile are off and on-peak, respectively
@@ -99,3 +99,14 @@ def removeBase( profData, duty ):
      profData = profData - baseline
 
      return profData
+
+
+def restart_line():
+     sys.stdout.write( '\r' )
+     sys.stdout.flush()
+
+def display_status( iteration, MAX_ITER ):
+    restart_line()
+
+    sys.stdout.write('{0:<10d}[{1:>3d}%]'.format( iteration, int( 100 * float( iteration )/float( MAX_ITER ) ) ) )
+    sys.stdout.flush()
