@@ -112,4 +112,4 @@ class ArgumentHandler:
         Calls an instance of the Timing class.
         """
 
-        timingObject = Timing( temp, input, band, nsubint, jump, saveDir, saveFile )
+        timingObject = Timing( temp, input, band, nsubint, jump, saveDir, saveFile, verbose = False )
