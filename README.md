@@ -17,7 +17,7 @@ test -f ~/.bashrc && source ~/.bashrc
 
 ## **Usage:**
 
-**Timing**
+### **Timing**
 
 To get Times-of-Arrival (TOAs), run the following command in the terminal:
 
@@ -39,24 +39,18 @@ Directories / files inside the text file need not be in any particular order.
 
 TOAs will be saved in TEMPO2 format to the save file path and filename given however, currently, the telescope name *will* need to be changed by the user to the newly used TEMPO2 codes until I can figure out how to implement this. If no output file path is given, current working directory will be used. If no filename is supplied, a default filename, `PSR_TOAs.toa`, will be used.
 
-**Templates**
+### **Templates**
 
-To create templates, create a file (or run from a python terminal shell) and initialize the Template class with the frequency band required (as a string) and the directories (also as strings).  
-Each directory being used should be separated by a comma. e.g.:
+To create templates, use the following command in the terminal:
 
-```python
-from PSRTemplate import Template
-
-templateobject = Template( band, directory1, directory2, ..., directoryN )
+```shell
+python PSRTemplate.py -b [frequency band] -d [directories to search for fits files in] -o [output filename] -od [output directory]
 ```
 
-Once the class is initialized, run
+Directories parsed to this command can either be local to the current working directory or absolute paths.
 
-```python
-templateobject.createTemplate( filename_to_save, directory_to_save_to )
-```
 
-If you need to delete a template in your code, you can run the `deleteTemplate()` method which takes in a required filename and directory where the template can be found.  
+If you need to delete a template in your code, you can run the `deleteTemplate()` method after initializing an instance of the Template class in your code (here called `templateObject`). This method takes in a required filename and **full path** directory where the template can be found.  
 The syntax is as follows:
 
 ```python
