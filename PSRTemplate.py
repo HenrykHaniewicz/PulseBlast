@@ -218,3 +218,42 @@ class Template:
             print( "{} deleted.".format( filename ) )
         else:
             raise FileNotFoundError( "Template file {} not found in {}".format( filename, directory ) )
+
+
+
+if __name__ == "__main__":
+
+    import argparse
+    from custom_exceptions import ArgumentError
+
+    parser = argparse.ArgumentParser( formatter_class = argparse.RawDescriptionHelpFormatter,
+                prog = 'PSRTemplate.py',
+                description = '''\
+                 PulseBlast Template Argument Handler
+                --------------------------------------
+                         Argument handler for
+                         PulseBlast Templates.
+                    ''' )
+
+    # Arguments list
+    parser.add_argument( '-b', '--band', dest = 'band', nargs = 1, default = None, help = '' )
+    parser.add_argument( '-o', '--output', dest = 'outputfile', nargs = 1, default = None, help = '' )
+    parser.add_argument( '-od', '--outputdir', dest = 'outputdirectory', nargs = 1, default = None, help = '' )
+    parser.add_argument( '-d', '--dir', dest = 'directories', nargs = '*', default = None, required = True, help = '' )
+
+
+    args = parser.parse_args()
+
+    # Checks argument requirements for non-optional flags (as a double check)
+    if ( not args.band ):
+        raise ArgumentError( "Frequency band argument (-b / --band) required." )
+    if ( not args.outputfile ):
+        raise ArgumentError( "Output file name argument (-o / --output) required." )
+    if ( not args.outputdirectory ):
+        raise ArgumentError( "Output directory name argument (-od / --outputdirectory) required." )
+    if ( not args.directories ):
+        raise ArgumentError( "At least on directory argument (-d / --dir) is required." )
+
+    # Initialize the template class object as normal and run the template creation script
+    templateObject = Template( args.band[0], ', '.join( args.directories ) )
+    templateObject.createTemplate( args.outputfile[0], args.outputdirectory[0] )
