@@ -1,12 +1,16 @@
 # Pulsar Template class, Python 3
 # Henryk T. Haniewicz, 2018
 
+# Local imports
+import otherUtilities as util
+
 # PyPulse imports
 from pypulse.archive import Archive
 
 # Other imports
 import os
 import sys
+import platform
 import numpy as np
 from astropy.io import fits
 import magic
@@ -106,7 +110,7 @@ class Template:
         for i, arguments in enumerate( self.args ):
 
             # Check if the directory was supplied by the user. If not, use current working directory.
-            if self.args == None:
+            if not self.args:
                 self.directory = str( os.getcwd() )
             else:
                 self.directory = str( self.args[i] )
@@ -220,40 +224,95 @@ class Template:
             raise FileNotFoundError( "Template file {} not found in {}".format( filename, directory ) )
 
 
-
+# Basically an argument handler and program executer if this file is run in the terminal
 if __name__ == "__main__":
 
-    import argparse
     from custom_exceptions import ArgumentError
+    import argparse
 
-    parser = argparse.ArgumentParser( formatter_class = argparse.RawDescriptionHelpFormatter,
-                prog = 'PSRTemplate.py',
-                description = '''\
-                 PulseBlast Template Argument Handler
-                --------------------------------------
-                         Argument handler for
-                         PulseBlast Templates.
-                    ''' )
-
-    # Arguments list
-    parser.add_argument( '-b', '--band', dest = 'band', nargs = 1, default = None, help = '' )
-    parser.add_argument( '-o', '--output', dest = 'outputfile', nargs = 1, default = None, help = '' )
-    parser.add_argument( '-od', '--outputdir', dest = 'outputdirectory', nargs = 1, default = None, help = '' )
-    parser.add_argument( '-d', '--dir', dest = 'directories', nargs = '*', default = None, required = True, help = '' )
+    # Default attempt to find the gooey package but switch to argparse if not
+    try:
+        from gooey import Gooey, GooeyParser
+        GUI = True
+    except ImportError:
+        GUI = False
 
 
-    args = parser.parse_args()
+    # Define a different main function with and without the gooey decorator
+    if GUI:
+        @Gooey( terminal_panel_color = '#000000', terminal_font_color = '#FFFFFF' )
+        def main():
 
-    # Checks argument requirements for non-optional flags (as a double check)
-    if ( not args.band ):
-        raise ArgumentError( "Frequency band argument (-b / --band) required." )
-    if ( not args.outputfile ):
-        raise ArgumentError( "Output file name argument (-o / --output) required." )
-    if ( not args.outputdirectory ):
-        raise ArgumentError( "Output directory name argument (-od / --outputdirectory) required." )
-    if ( not args.directories ):
-        raise ArgumentError( "At least on directory argument (-d / --dir) is required." )
+            parser = GooeyParser( prog = 'PSRTemplate.py',
+                            description = '''\
+                               PulseBlast Template Argument Handler
+                           -------------------------------------------
+                            Argument handler for PulseBlast Templates
+                                ''' )
 
-    # Initialize the template class object as normal and run the template creation script
-    templateObject = Template( args.band[0], ', '.join( args.directories ) )
-    templateObject.createTemplate( args.outputfile[0], args.outputdirectory[0] )
+
+            # Arguments list
+            parser.add_argument( '-b', dest = 'band', metavar = 'Frequency Band', nargs = 1, default = None, help = 'Frequency band of observation. This should match the band string in the PSRFITS file.' )
+            parser.add_argument( '-o', dest = 'outputfile', metavar = 'Output File', nargs = 1, default = None, widget = 'FileSaver', help = 'Name of the output file and path (select). Standard extention is .npy but any other extension can overwrite this.' )
+            parser.add_argument( '-d', dest = 'directories', metavar = 'Directories List', nargs = '*', default = None, widget = 'MultiDirChooser', help = 'Directories to search for PSRFITS files in. Directories should be seperated by a space' )
+
+            args = parser.parse_args()
+
+            # Checks argument requirements for non-optional flags (as a double check)
+            if ( not args.band ):
+                raise ArgumentError( "Frequency band argument required." )
+            if ( not args.outputfile ):
+                raise ArgumentError( "Output file name argument required." )
+            if ( not args.directories ):
+                raise ArgumentError( "At least one directory argument is required." )
+
+            # Formats the directories based on OS
+            directories = util.formatMultipleDirectories( args.directories )
+
+
+            odir, ofile = os.path.split( args.outputfile[0] )
+            odir, idirs = util.addDirectoryEndSeparators( odir, directories )
+
+            # Initialize the template class object as normal and run the template creation script
+            templateObject = Template( args.band[0], *idirs )
+            templateObject.createTemplate( ofile, odir )
+
+    # If the UI package is unavailable
+    else:
+        def main():
+
+            parser = argparse.ArgumentParser( formatter_class = argparse.RawDescriptionHelpFormatter,
+                            prog = 'PSRTemplate.py', description = '''\
+                               PulseBlast Template Argument Handler
+                           -------------------------------------------
+                            Argument handler for PulseBlast Templates
+                                ''' )
+
+            parser.add_argument( '-b', dest = 'band', metavar = 'Frequency Band', nargs = 1, default = None, help = 'Frequency band of observation. This should match the band string in the PSRFITS file.' )
+            parser.add_argument( '-o', dest = 'outputfile', metavar = 'Output File', nargs = 1, default = None, help = 'Name of the output file and path. Standard extention is .npy but any other extension can overwrite this.' )
+            parser.add_argument( '-d', dest = 'directories', metavar = 'Directories List', nargs = '*', default = None, help = 'Directories to search for PSRFITS files in. Directories should be seperated by a space' )
+
+            args = parser.parse_args()
+
+
+            # Checks argument requirements for non-optional flags (as a double check)
+            if ( not args.band ):
+                raise ArgumentError( "Frequency band argument required." )
+            if ( not args.outputfile ):
+                raise ArgumentError( "Output file name argument required." )
+            if ( not args.directories ):
+                raise ArgumentError( "At least one directory argument is required." )
+
+
+            # Makes sure directories and files are all in the right format for parsing in any OS
+            odir, ofile = os.path.split( args.outputfile[0] )
+            odir, idirs = util.addDirectoryEndSeparators( odir, args.directories )
+
+
+            # Initialize the template class object as normal and run the template creation script
+            templateObject = Template( args.band[0], *idirs )
+            templateObject.createTemplate( ofile, odir )
+
+
+    # Run the main function
+    main()
