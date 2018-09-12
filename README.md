@@ -79,7 +79,7 @@ templateObject.deleteTemplate( filename_of_template, full_path_to_directory )
 
 Python 3.X  
 
-PyPulse
+PyPulse  
 numpy  
 scipy  
 astropy  
