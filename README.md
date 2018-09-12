@@ -44,11 +44,11 @@ TOAs will be saved in TEMPO2 format to the save file path and filename given how
 **Creating templates**
 
 If you wish you use GUI features, `pip install gooey`.
-The GUI is a simple field based argument handler to select files and directories from.
+The GUI is a simple field based argument handler to select files and directories from. 
 
-If you are running Python in a virtual environment in bash shell, you will need to make you're running a framework version of Python. To do this, edit the [fwpy](https://github.com/HenrykHaniewicz/PulseBlast/blob/master/fwpy "Framework bash file") file as necessary and paste it into the directory where your Python executable is.
+If you are running Python in a [virtual environment](https://docs.python.org/3/tutorial/venv.html "Virtual environment documentation") within the shell, you will need to make you're running a **framework version** of Python. To do this, edit the [fwpy](https://github.com/HenrykHaniewicz/PulseBlast/blob/master/fwpy "Framework bash file") file as necessary and paste it into the directory where your Python executable is.
 
-To run the program in GUI, provided you have followed the setup above, type the command:
+To run the program in GUI mode, provided you have followed the setup above, type the command:
 
 ```shell
 fwpy PSRTemplate.py
@@ -59,7 +59,7 @@ If you do not wish to use the GUI, the template program can also be used via CLI
 To create templates using CLI, use the following command in the terminal:
 
 ```shell
-python PSRTemplate.py -b [frequency band] -d [directories to search for fits files in] -o [output directory and filename]
+python PSRTemplate.py -b [frequency_band] -d [directories_to_search_for_psrfits_files_in] -o [output_directory_and_filename]
 ```
 
 Directories parsed to this command can either be local to the current working directory or absolute paths.
@@ -79,7 +79,7 @@ templateObject.deleteTemplate( filename_of_template, full_path_to_directory )
 
 Python 3.X  
 
-PyPulse  
+PyPulse
 numpy
 scipy
 astropy
