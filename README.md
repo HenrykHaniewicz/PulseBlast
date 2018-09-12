@@ -43,7 +43,7 @@ TOAs will be saved in TEMPO2 format to the save file path and filename given how
 
 **Creating templates**
 
-**Currently, GUI options provided by gooey ONLY work with my fork of gooey until my pull request goes through**
+*Currently, GUI options provided by gooey ONLY work with* **[my fork of gooey](https://github.com/HenrykHaniewicz/Gooey "HenrykHaniewicz/Gooey")** *until my pull request goes through*
 
 If you wish you use GUI features, `pip install gooey`.
 The GUI is a simple field based argument handler to select files and directories from.
