@@ -22,7 +22,7 @@ test -f ~/.bashrc && source ~/.bashrc
 To get Times-of-Arrival (TOAs), run the following command in the terminal:
 
 ```shell
-python main.py -x [text files containing directories and / or files] -t [frequency band] --temp [full path to template] -s [sub-integrations to scrunch to] -j [jump_after_fluxerr] -od [toa_output_file_directory] -o [toa_output_filename]
+python main.py -x [text_files_containing_directories_and_/_or_files] -t [frequency_band] --temp [full_path_to_template] -s [sub-integrations_to_scrunch_to] -j [jump_after_fluxerr] -od [toa_output_file_directory] -o [toa_output_filename]
 ```
 
 Text files should only contain directories (ending in a "/") or files (ending in a ".???"). E.g. `input.txt`:
@@ -92,7 +92,7 @@ gooey
 
 
 
-It is suggested to have the most up-to-date of the packages listed. To upgrade all python packages at once, try the following command:
+It is suggested to have the most up-to-date versions of the packages listed. To upgrade all python packages at once, try the following command:
 
 ```shell
 pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
