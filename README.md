@@ -41,14 +41,30 @@ TOAs will be saved in TEMPO2 format to the save file path and filename given how
 
 ### **Templates**
 
-To create templates, use the following command in the terminal:
+**Creating templates**
+
+If you wish you use GUI features, `pip install gooey`.
+The GUI is a simple field based argument handler to select files and directories from.
+
+If you are running Python in a virtual environment in bash shell, you will need to make you're running a framework version of Python. To do this, edit the [fwpy](https://github.com/HenrykHaniewicz/PulseBlast/blob/master/fwpy "Framework bash file") file as necessary and paste it into the directory where your Python executable is.
+
+To run the program in GUI, provided you have followed the setup above, type the command:
 
 ```shell
-python PSRTemplate.py -b [frequency band] -d [directories to search for fits files in] -o [output filename] -od [output directory]
+fwpy PSRTemplate.py
+```
+
+If you do not wish to use the GUI, the template program can also be used via CLI.
+
+To create templates using CLI, use the following command in the terminal:
+
+```shell
+python PSRTemplate.py -b [frequency band] -d [directories to search for fits files in] -o [output directory and filename]
 ```
 
 Directories parsed to this command can either be local to the current working directory or absolute paths.
 
+**Deleting templates**
 
 If you need to delete a template in your code, you can run the `deleteTemplate()` method after initializing an instance of the Template class in your code (here called `templateObject`). This method takes in a required filename and **full path** directory where the template can be found.  
 The syntax is as follows:
@@ -64,8 +80,20 @@ templateObject.deleteTemplate( filename_of_template, full_path_to_directory )
 Python 3.X  
 
 PyPulse  
-Numpy v1.14.5  
-Scipy v1.1.0  
-Astropy v3.0.3  
-Matplotlib v2.2.2  
-Filemagic v1.6
+numpy
+scipy
+astropy
+matplotlib
+filemagic
+
+**Required for GUI:**
+
+gooey
+
+
+
+It is suggested to have the most up-to-date of the packages listed. To upgrade all python packages at once, try the following command:
+
+```shell
+pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
+```
