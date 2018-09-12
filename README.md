@@ -44,7 +44,7 @@ TOAs will be saved in TEMPO2 format to the save file path and filename given how
 **Creating templates**
 
 If you wish you use GUI features, `pip install gooey`.
-The GUI is a simple field based argument handler to select files and directories from. 
+The GUI is a simple field based argument handler to select files and directories from.
 
 If you are running Python in a [virtual environment](https://docs.python.org/3/tutorial/venv.html "Virtual environment documentation") within the shell, you will need to make you're running a **framework version** of Python. To do this, edit the [fwpy](https://github.com/HenrykHaniewicz/PulseBlast/blob/master/fwpy "Framework bash file") file as necessary and paste it into the directory where your Python executable is.
 
@@ -80,15 +80,15 @@ templateObject.deleteTemplate( filename_of_template, full_path_to_directory )
 Python 3.X  
 
 PyPulse
-numpy
-scipy
-astropy
-matplotlib
-filemagic
+numpy  
+scipy  
+astropy  
+matplotlib  
+filemagic  
 
 **Required for GUI:**
 
-gooey
+gooey  
 
 
 
