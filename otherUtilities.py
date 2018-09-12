@@ -3,6 +3,7 @@
 # Imports
 import numpy as np
 import math
+import os
 import sys
 import platform
 import mathUtils as mu
@@ -111,6 +112,23 @@ def display_status( iteration, MAX_ITER ):
 
     sys.stdout.write('{0:<10d}[{1:>3d}%]'.format( iteration, int( 100 * float( iteration )/float( MAX_ITER ) ) ) )
     sys.stdout.flush()
+
+# Checks if 'file' has extension 'ext' and, if not, adds it.
+def addExtension( file, ext ):
+    if not isinstance( ext, str ):
+        raise TypeError( "Extension must be a string" )
+
+    # Split the filename up into a root and extension
+    root, end = os.path.splitext( file )
+
+    # If file extension does not exist, add the extension
+    if not end:
+        end = '.' + ext
+        fileout = root + end
+    else:
+        fileout = file
+
+    return fileout
 
 
 # Formats directories from UI to console
