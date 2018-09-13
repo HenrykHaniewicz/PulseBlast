@@ -8,6 +8,7 @@ from custom_exceptions import *
 # Other imports
 import argparse
 import os
+from gooey import Gooey
 
 class ArgumentHandler:
 
@@ -72,8 +73,7 @@ class ArgumentHandler:
     def __str__( self ):
         return self.progname
 
-
-
+    @Gooey()
     def parser( self, progname ):
 
         """

@@ -2,7 +2,7 @@
 # Henryk T. Haniewicz, 2018
 
 # Local imports
-import otherUtilities as util
+import otherUtilities as u
 
 # PyPulse imports
 from pypulse.archive import Archive
@@ -267,11 +267,11 @@ if __name__ == "__main__":
                 raise ArgumentError( "At least one directory argument is required." )
 
             # Formats the directories based on OS
-            directories = util.formatMultipleDirectories( args.directories )
+            directories = u.formatMultipleDirectories( args.directories )
 
 
             odir, ofile = os.path.split( args.outputfile[0] )
-            odir, idirs = util.addDirectoryEndSeparators( odir, directories )
+            odir, idirs = u.addDirectoryEndSeparators( odir, directories )
 
             # Initialize the template class object as normal and run the template creation script
             templateObject = Template( args.band[0], *idirs )
@@ -306,7 +306,7 @@ if __name__ == "__main__":
 
             # Makes sure directories and files are all in the right format for parsing in any OS
             odir, ofile = os.path.split( args.outputfile[0] )
-            odir, idirs = util.addDirectoryEndSeparators( odir, args.directories )
+            odir, idirs = u.addDirectoryEndSeparators( odir, args.directories )
 
 
             # Initialize the template class object as normal and run the template creation script

@@ -2,8 +2,8 @@
 # Henryk T. Haniewicz, 2018
 
 # Local imports
-import mathUtils
-import otherUtilities as utils
+import mathUtils as mu
+import pulsarUtilities as pu
 
 # PyPulse imports
 from pypulse.archive import Archive
@@ -209,11 +209,11 @@ class DataCull:
         # Determine which criterion to use to reject data
         if criterion == 'chauvenet': # Chauvenet's Criterion
 
-            rejectionCriterion = mathUtils.chauvenet( rmsArray, mu, sigma, 3 )
+            rejectionCriterion = mu.chauvenet( rmsArray, mu, sigma, 3 )
 
         elif criterion == 'DMAD': # Double Median Absolute Deviation
 
-            rejectionCriterion = mathUtils.doubleMAD( linearRmsArray )
+            rejectionCriterion = mu.doubleMAD( linearRmsArray )
             rejectionCriterion = np.reshape( rejectionCriterion, ( self.ar.getNsubint(), self.ar.getNchan() ) )
 
         else:
@@ -243,7 +243,7 @@ class DataCull:
         rmsMatrix = np.zeros( ( self.ar.getNsubint(), self.ar.getNchan() ), dtype = float )
 
         # Create a mask along the bin space on the template profile
-        #mask = utils.binMaskFromTemplate( self.template )
+        #mask = pu.binMaskFromTemplate( self.template )
         mask = np.zeros( self.ar.getNbin(), dtype = int )
         mask[990:1100] = 1
 
@@ -252,7 +252,7 @@ class DataCull:
             for frequency in np.arange( self.ar.getNchan() ):
 
                 # Calculate the RMS of the off-pulse region and assign it to the relevant index
-                rmsMatrix[time][frequency] = mathUtils.rootMeanSquare( self.data[time][frequency][mask == 0] )
+                rmsMatrix[time][frequency] = mu.rootMeanSquare( self.data[time][frequency][mask == 0] )
 
                 if all( amp == 0 for amp in self.data[time][frequency] ):
                     rmsMatrix[time][frequency] = np.nan
@@ -299,7 +299,7 @@ class DataCull:
 
             plt.show()
 
-        rejectionCriterionS, rejectionCriterionE = mathUtils.chauvenet( nBinShift, muS, sigmaS ), mathUtils.chauvenet( nBinError, muE, sigmaE )
+        rejectionCriterionS, rejectionCriterionE = mu.chauvenet( nBinShift, muS, sigmaS ), mu.chauvenet( nBinError, muE, sigmaE )
 
         # Set the weights of potential noise in each profile to 0
         for time, frequency in zip( np.where( rejectionCriterionS )[0], np.where( rejectionCriterionS )[1] ):
