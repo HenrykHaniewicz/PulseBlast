@@ -76,7 +76,7 @@ class Template:
         return self.templateProfile
 
 
-    def createTemplate( self, filename = None, saveDirectory = None ):
+    def createTemplate( self, filename = None, saveDirectory = None, verbose = False ):
 
         '''
         Loads the archive of each file in self.directory using PyPulse.
@@ -85,7 +85,8 @@ class Template:
         If arguments are not provided for the template name (without the .npy suffix) or directory name, a default file name and CWD will be used.
         '''
 
-        print( "Beginning template creation..." )
+        if verbose:
+            print( "Beginning template creation..." )
 
         # Check if the filename has been provided
         if filename != None:
@@ -118,8 +119,11 @@ class Template:
             if not os.path.isdir( self.args[i] ):
                 raise NotADirectoryError( "{} is not a directory.".format( self.args[i] ) )
 
+            if not verbose:
+                sys.stdout.write( '\n {0:<7s}  {1:<7s}\n'.format( 'Files', '% done' ) )
+
             # Cycle through each file in the stored directory
-            for file in os.listdir( self.directory ):
+            for j, file in enumerate( os.listdir( self.directory ) ):
                 # Set the file to be a global variable in the class for use elsewhere
                 self.file = str( file )
 
@@ -135,6 +139,7 @@ class Template:
                         hdul = fits.open( self.directory + self.file )
                     except OSError:
                         print( "File {} did not match ASCII signature required for a fits file".format( self.file ) )
+                        u.display_status( j, len( os.listdir( self.directory ) ) )
                         continue
 
                     # Check if the OBS_MODE is PSR and if not, skip it
@@ -145,6 +150,7 @@ class Template:
                             frontend = hdul[0].header[ 'FRONTEND' ]
                         except OSError:
                             print( "Could not find any frontend information in file {}".format( self.file ) )
+                            u.display_status( j, len( os.listdir( self.directory ) ) )
                             continue
 
                         # Close the header once it's been used or the program becomes very slow.
@@ -156,24 +162,37 @@ class Template:
                             self.templateProfile = self._templateCreationScript()
 
                         else:
-                            print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
+                            if verbose:
+                                print( "Frontend provided for {} does not match frontend in fits file ( Input: {}, Expected: {} )".format( self.file, self.band, frontend ) )
+                            else:
+                                u.display_status( j, len( os.listdir( self.directory ) ) )
+                                continue
 
                     # Potential custom handling when OBS_MODE is CAL or SEARCH
                     elif hdul[0].header[ 'OBS_MODE' ] == 'CAL':
-                        print( "Skipping calibration file..." )
+                        if verbose:
+                            print( "Skipping calibration file..." )
                         hdul.close()
 
                     elif hdul[0].header[ 'OBS_MODE' ] == 'SEARCH':
-                        print( "Skipping search file..." )
+                        if verbose:
+                            print( "Skipping search file..." )
                         hdul.close()
 
                     # If none of the options are present, raise OSError
                     else:
+                        hdul.close()
                         raise OSError( "OBS_MODE found in file does not match known file types. ( Expected: PSR, CAL, SEARCH. Found: {} )".format( hdul[0].header[ 'OBS_MODE' ] ) )
 
                 # If the binary signature doesn't match that of a fits file, skip completely
                 else:
-                    print( "{} is not a fits file...".format( self.file ) )
+                    if verbose:
+                        print( "{} is not a fits file...".format( self.file ) )
+                    else:
+                        u.display_status( j, len( os.listdir( self.directory ) ) )
+                        continue
+
+                u.display_status( j, len( os.listdir( self.directory ) ) )
 
 
             # Check if this is the last directory in the list
@@ -188,7 +207,10 @@ class Template:
                     np.save( saveDirectory + filename_in_str, self.templateProfile )
 
         # Decide what to return based on doType
-        print( "{} template profile created...".format( self.band ) )
+        if verbose:
+            print( "{} template profile created...".format( self.band ) )
+        else:
+            print( "Done" )
         return self.templateProfile
 
 
