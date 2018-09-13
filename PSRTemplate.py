@@ -208,7 +208,7 @@ class Template:
 
         print( "Attempting to delete: {}{}".format( directory, filename ) )
 
-        filename = util.addExtension( filename, 'npy' )
+        filename = u.addExtension( filename, 'npy' )
 
         # if file exists, delete it. If not, raise FileNotFoundError
         if os.path.isfile( directory + filename ):
