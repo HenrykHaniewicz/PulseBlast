@@ -181,9 +181,9 @@ class Template:
 
                 # Check if a save name was provided and save as appropriate
                 if filename == None and saveDirectory == None:
-                    np.save( os.getcwd() + "Lbandtemplate.npy", self.templateProfile )
+                    np.save( os.getcwd() + "PSR_template.npy", self.templateProfile )
                 elif filename == None:
-                    np.save( saveDirectory + "Lbandtemplate.npy", self.templateProfile )
+                    np.save( saveDirectory + "PSR_template.npy", self.templateProfile )
                 else:
                     np.save( saveDirectory + filename_in_str, self.templateProfile )
 
@@ -208,13 +208,7 @@ class Template:
 
         print( "Attempting to delete: {}{}".format( directory, filename ) )
 
-        # Split the filename up into a root and extension
-        root, ext = os.path.splitext( filename )
-
-        # If file extension does not exist, assume it is a .npy file
-        if not ext:
-            ext = '.npy'
-            filename = root + ext
+        filename = util.addExtension( filename, 'npy' )
 
         # if file exists, delete it. If not, raise FileNotFoundError
         if os.path.isfile( directory + filename ):
@@ -269,7 +263,7 @@ if __name__ == "__main__":
             # Formats the directories based on OS
             directories = u.formatMultipleDirectories( args.directories )
 
-
+            # Makes sure directories and files are all in the right format for parsing in any OS
             odir, ofile = os.path.split( args.outputfile[0] )
             odir, idirs = u.addDirectoryEndSeparators( odir, directories )
 

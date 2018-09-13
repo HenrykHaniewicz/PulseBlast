@@ -110,14 +110,9 @@ class DataCull:
         Returns the template.
         '''
 
-        # Parse the template's filename into a string
+        # Parse the template's filename into a string and ensure the correct extension
         self.templateName = str( templateFilename )
-        root, ext = os.path.splitext( templateFilename )
-
-        # If file extension does not exist, assume it is a .npy file
-        if not ext:
-            ext = '.npy'
-            self.templateName = root + ext
+        self.templateName = util.addExtension( self.templateName, 'npy' )
 
         # Load the template
         template = np.load( self.templateName )
