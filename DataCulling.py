@@ -2,8 +2,9 @@
 # Henryk T. Haniewicz, 2018
 
 # Local imports
-import mathUtils as mu
+import mathUtils as mathu
 import pulsarUtilities as pu
+import otherUtilities as u
 
 # PyPulse imports
 from pypulse.archive import Archive
@@ -74,7 +75,7 @@ class DataCull:
         self.SNLim = SNLim
 
         # Load the file in the archive
-        self.ar = Archive( self.__str__(), verbose = False )
+        self.ar = Archive( self.__str__(), verbose = self.verbose )
 
         # Togglable print options
         if self.verbose:
@@ -89,9 +90,6 @@ class DataCull:
 
         # Load the data cube for the file
         self.data = self.ar.getData()
-
-        if self.verbose and not self.SNError:
-            print( "{} and {} fully loaded...".format( self.filename, self.templateName ) )
 
 
     def __repr__( self ):
@@ -112,7 +110,7 @@ class DataCull:
 
         # Parse the template's filename into a string and ensure the correct extension
         self.templateName = str( templateFilename )
-        self.templateName = util.addExtension( self.templateName, 'npy' )
+        self.templateName = u.addExtension( self.templateName, 'npy' )
 
         # Load the template
         template = np.load( self.templateName )
@@ -202,13 +200,13 @@ class DataCull:
             plt.show()
 
         # Determine which criterion to use to reject data
-        if criterion == 'chauvenet': # Chauvenet's Criterion
+        if criterion is 'chauvenet': # Chauvenet's Criterion
 
-            rejectionCriterion = mu.chauvenet( rmsArray, mu, sigma, 3 )
+            rejectionCriterion = mathu.chauvenet( rmsArray, mu, sigma, 3 )
 
-        elif criterion == 'DMAD': # Double Median Absolute Deviation
+        elif criterion is 'DMAD': # Double Median Absolute Deviation
 
-            rejectionCriterion = mu.doubleMAD( linearRmsArray )
+            rejectionCriterion = mathu.doubleMAD( linearRmsArray )
             rejectionCriterion = np.reshape( rejectionCriterion, ( self.ar.getNsubint(), self.ar.getNchan() ) )
 
         else:
@@ -216,9 +214,10 @@ class DataCull:
             exit()
 
         # Set the weights of potential noise in each profile to 0
-        for time, frequency in zip( np.where( rejectionCriterion )[0], np.where( rejectionCriterion )[1] ):
-            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-            self.ar.setWeights( 0, t = time, f = frequency )
+        u.zeroWeights( rejectionCriterion, self.ar, self.verbose )
+        # for time, frequency in zip( np.where( rejectionCriterion )[0], np.where( rejectionCriterion )[1] ):
+        #     print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+        #     self.ar.setWeights( 0, t = time, f = frequency )
 
         # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
         if( len( np.where( rejectionCriterion )[0] ) == 0 ):
@@ -245,7 +244,7 @@ class DataCull:
             for frequency in np.arange( self.ar.getNchan() ):
 
                 # Calculate the RMS of the off-pulse region and assign it to the relevant index
-                rmsMatrix[time][frequency] = mu.rootMeanSquare( self.data[time][frequency][mask == 0] )
+                rmsMatrix[time][frequency] = mathu.rootMeanSquare( self.data[time][frequency][mask == 0] )
 
                 if all( amp == 0 for amp in self.data[time][frequency] ):
                     rmsMatrix[time][frequency] = np.nan
@@ -292,18 +291,21 @@ class DataCull:
 
             plt.show()
 
-        rejectionCriterionS, rejectionCriterionE = mu.chauvenet( nBinShift, muS, sigmaS ), mu.chauvenet( nBinError, muE, sigmaE )
+        rejectionCriterionS, rejectionCriterionE = mathu.chauvenet( nBinShift, muS, sigmaS ), mathu.chauvenet( nBinError, muE, sigmaE )
 
         # Set the weights of potential noise in each profile to 0
-        for time, frequency in zip( np.where( rejectionCriterionS )[0], np.where( rejectionCriterionS )[1] ):
-            if self.verbose:
-                print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-            self.ar.setWeights( 0, t = time, f = frequency )
+        u.zeroWeights( rejectionCriterionS, self.ar, self.verbose )
+        u.zeroWeights( rejectionCriterionE, self.ar, self.verbose )
 
-        for time, frequency in zip( np.where( rejectionCriterionE )[0], np.where( rejectionCriterionE )[1] ):
-            if self.verbose:
-                print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-            self.ar.setWeights( 0, t = time, f = frequency )
+        # for time, frequency in zip( np.where( rejectionCriterionS )[0], np.where( rejectionCriterionS )[1] ):
+        #     if self.verbose:
+        #         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+        #     self.ar.setWeights( 0, t = time, f = frequency )
+        #
+        # for time, frequency in zip( np.where( rejectionCriterionE )[0], np.where( rejectionCriterionE )[1] ):
+        #     if self.verbose:
+        #         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+        #     self.ar.setWeights( 0, t = time, f = frequency )
 
         # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
         if len( np.where( rejectionCriterionS )[0] ) == 0 and len( np.where( rejectionCriterionE )[0] ) == 0:

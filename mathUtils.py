@@ -2,7 +2,7 @@
 # Henryk T. Haniewicz, 2018
 
 # Imports
-import numpy
+import numpy as np
 
 # Functions
 
@@ -12,7 +12,7 @@ def rootMeanSquare( array ):
     Returns the RMS of a data array
     '''
 
-    rms = numpy.sqrt( numpy.mean( numpy.power( array, 2 ) ) )
+    rms = np.sqrt( np.mean( np.power( array, 2 ) ) )
     return rms
 
 
@@ -39,16 +39,16 @@ def doubleMAD( vector, threshold = 3.5 ):
     '''
 
     # Calculate the overall median (allows for masked vectors)
-    m = numpy.ma.median( vector )
+    m = np.ma.median( vector )
 
     # Calculate the absolute deviation from the true median
-    absDev = numpy.abs( vector - m )
+    absDev = np.abs( vector - m )
 
     # Calculate the median absolute deviation for both the left and right splits
-    leftMAD = numpy.ma.median( absDev[vector <= m] )
-    rightMAD = numpy.ma.median( absDev[vector >= m] )
+    leftMAD = np.ma.median( absDev[vector <= m] )
+    rightMAD = np.ma.median( absDev[vector >= m] )
 
-    vectorMAD = leftMAD * numpy.ones( len( vector ) )
+    vectorMAD = leftMAD * np.ones( len( vector ) )
     vectorMAD[vector > m] = rightMAD
 
     # Calculate the modified Z score

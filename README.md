@@ -1,5 +1,5 @@
 # PulseBlast
-Basic python package to work with creating pulsar templates and radio frequency interference excision.
+A basic python package that deals with pulsar data manipulation in a variety of ways. Options include the ability to create Times-Of-Arrival (TOAs), excise RFI from pulse scans and easily create pulsar template profiles.
 
 ## **Mac Setup:**
 
@@ -22,7 +22,7 @@ test -f ~/.bashrc && source ~/.bashrc
 To get Times-of-Arrival (TOAs), run the following command in the terminal:
 
 ```shell
-python main.py -x [text_files_containing_directories_and_/_or_files] -t [frequency_band] --temp [full_path_to_template] -s [sub-integrations_to_scrunch_to] -j [jump_after_fluxerr] -od [toa_output_file_directory] -o [toa_output_filename]
+python main.py -x [text_files_containing_directories_and_/_or_files] -t [frequency_band] --temp [full_path_to_template] -s [sub-integrations_to_scrunch_to] -j [jump_after_fluxerr] -od [toa_output_file_directory] -o [toa_output_filename] -r [number_of_generations] -v
 ```
 
 Text files should only contain directories (ending in a "/") or files (ending in a ".???"). E.g. `input.txt`:
@@ -37,7 +37,11 @@ Text files should only contain directories (ending in a "/") or files (ending in
 
 Directories / files inside the text file need not be in any particular order.
 
-TOAs will be saved in TEMPO2 format to the save file path and filename given however, currently, the telescope name *will* need to be changed by the user to the newly used TEMPO2 codes until I can figure out how to implement this. If no output file path is given, current working directory will be used. If no filename is supplied, a default filename, `PSR_TOAs.toa`, will be used.
+The jump flag, `-j`, is used to add a string to the end of each line of the output TOA file. These are most likely to be jumps (hence the name) but the string itself can be anything supplied by the user.  
+
+TOAs will be saved in TEMPO2 format to the output path and output filename given however, currently, the telescope name *will* need to be changed by the user to the newly used TEMPO2 codes until I can figure out how to implement this. If no output path is given, the current working directory will be used. If no filename is supplied, a default filename, `PSR_TOAs.toa`, will be used.  
+
+The final two arguments denote the rejection and verbose flag respectively. The rejection flag plus its argument runs an RFI excision algorithm to the number of generations supplied by the user. If no number is supplied after the `-r` flag, an arbitrary default of 6 will be used. The verbose flag, `-v`, if set, will display more detailed information to the user about what is being loaded, how long tasks take, as well as many other features that might be useful for developers.  
 
 ### **Templates**
 
@@ -45,10 +49,14 @@ TOAs will be saved in TEMPO2 format to the save file path and filename given how
 
 *Currently, GUI options provided by gooey ONLY work with* **[my fork of gooey](https://github.com/HenrykHaniewicz/Gooey "HenrykHaniewicz/Gooey")** *until my pull request goes through*
 
-If you wish you use GUI features, `pip install gooey`.
-The GUI is a simple field based argument handler to select files and directories from.
+If you wish you use Graphical User Interface (GUI) features, `pip install gooey`.
+The GUI is a simple field based argument handler to select files and directories from.  
 
-If you are running Python in a [virtual environment](https://docs.python.org/3/tutorial/venv.html "Virtual environment documentation") within the shell, you will need to make you're running a **framework version** of Python. To do this, edit the [fwpy](https://github.com/HenrykHaniewicz/PulseBlast/blob/master/fwpy "Framework bash file") file as necessary and paste it into the directory where your Python executable is.
+If you are running Python in a [virtual environment](https://docs.python.org/3/tutorial/venv.html "Virtual environment documentation") within the shell, you will need to make you're running a **framework version** of Python. To do this, edit the [fwpy](https://github.com/HenrykHaniewicz/PulseBlast/blob/master/fwpy "Framework bash file") file as necessary and paste it into the directory where your Python executable is. Once this is done, make sure `fwpy` has executable permissions. You can set this as follows:
+
+```shell
+chmod a+w fwpy
+```
 
 To run the program in GUI mode, provided you have followed the setup above, type the command:
 
@@ -56,9 +64,7 @@ To run the program in GUI mode, provided you have followed the setup above, type
 fwpy PSRTemplate.py
 ```
 
-If you do not wish to use the GUI, the template program can also be used via CLI.
-
-To create templates using CLI, use the following command in the terminal:
+If you do not wish to use the GUI, the template program can also be used via Command Line Interface (CLI). To create templates using CLI, use the following command in the terminal:
 
 ```shell
 python PSRTemplate.py -b [frequency_band] -d [directories_to_search_for_psrfits_files_in] -o [output_directory_and_filename]

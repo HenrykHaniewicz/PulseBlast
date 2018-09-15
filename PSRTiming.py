@@ -21,7 +21,7 @@ class Timing:
     TEMPO2 format, and creating fake TOAs for prediction models based on user defined criteria.
     '''
 
-    def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None, verbose = False ):
+    def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None, verbose = False, RFI = False ):
 
         '''
         Initializes an instance of the class with a required template and a directory or file (collectively known as 'input') to time
@@ -34,6 +34,8 @@ class Timing:
         self.directory = str( input )
 
         self.verbose = verbose
+
+        self.rfi = RFI
 
         # If a TOA save directory has been provided, initialize it. Otherwise, CWD.
         if saveDirectory is not None:
@@ -68,19 +70,19 @@ class Timing:
 
         # Determine which version of getTOAs is needed (likely to change)
         if os.path.isdir( self.directory ):
-            self.getTOAs_dir( save = self.savePath )
+            self.getTOAs_dir( save = self.savePath, exciseRFI = RFI )
         elif os.path.isfile( self.directory ):
-            self.getTOAs_file()
+            self.getTOAs_file( exciseRFI = RFI )
         else:
             raise OSError( "{} does not exist.".format( self.directory ) )
 
 
 
     def __repr__( self ):
-        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {}, jump = {}, saveDirectory = {}, toaFile = {}, verbose = {} )".format( self.template, self.directory, self.band, self.nsubint, self.jump, self.saveDirectory. self.toaFile, self.verbose )
+        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {}, jump = {}, saveDirectory = {}, toaFile = {}, verbose = {}, RFI = {} )".format( self.template, self.directory, self.band, self.nsubint, self.jump, self.saveDirectory. self.toaFile, self.verbose, self.rfi )
 
     def __str__( self ):
-        return self.template, self.directory, self.band, self.subint, self.jump, self.saveDirectory, self.toaFile, self.verbose
+        return self.template, self.directory, self.band, self.subint, self.jump, self.saveDirectory, self.toaFile, self.verbose, self.rfi
 
 
     def getTOAs_dir( self, save = None, exciseRFI = False ):
@@ -136,7 +138,7 @@ class Timing:
 
                     # If enabled, perform a standard RFI cull
                     if exciseRFI:
-                        cullObject.reject( 'chauvenet', 15, True )
+                        cullObject.reject( 'chauvenet', 15, self.verbose )
 
                     # Check if the band provided matches that in the header
                     if frontend == self.band:
@@ -231,7 +233,7 @@ class Timing:
 
                 # If enabled, perform a standard RFI cull
                 if exciseRFI:
-                    cullObject.reject( 'chauvenet', 15, True )
+                    cullObject.reject( 'chauvenet', 15, self.verbose )
 
                 # Check if the band provided matches that in the header
                 if frontend == self.band:

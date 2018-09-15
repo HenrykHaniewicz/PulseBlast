@@ -2,7 +2,26 @@
 
 # Imports
 import sys
+import os
 import platform
+import numpy as np
+
+
+def zeroWeights( criterion = None, archive = None, verbose = False ):
+
+    '''
+    Scans through each sub-integration and channel and zeros any bad scans to zero.
+    '''
+
+    if criterion is None:
+        raise ValueError( "Please provide a rejection criterion" )
+    elif archive is None:
+        raise ValueError( "Please provide an archive" )
+
+    for time, frequency in zip( np.where( criterion )[0], np.where( criterion )[1] ):
+        if verbose:
+            print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+        archive.setWeights( 0, t = time, f = frequency )
 
 
 def restart_line():
@@ -17,6 +36,12 @@ def display_status( iteration, MAX_ITER ):
 
 # Checks if 'file' has extension 'ext' and, if not, adds it.
 def addExtension( file, ext ):
+
+    '''
+    Add any desired extension to a file that doesn't have one.
+    If the file does, that extension will be used instead.
+    '''
+
     if not isinstance( ext, str ):
         raise TypeError( "Extension must be a string" )
 

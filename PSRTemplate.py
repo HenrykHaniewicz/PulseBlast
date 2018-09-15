@@ -15,6 +15,10 @@ import numpy as np
 from astropy.io import fits
 import magic
 
+# Filter various annoying warnings (such as "cannot perform >= np.nan"). We know already...
+import warnings
+warnings.filterwarnings( "ignore" )
+
 
 # Template class
 class Template:
