@@ -8,7 +8,6 @@ from custom_exceptions import *
 # Other imports
 import argparse
 import os
-from gooey import Gooey
 
 class ArgumentHandler:
 
@@ -43,7 +42,7 @@ class ArgumentHandler:
              directory_in_str = str( os.getcwd() )
 
              for file in os.listdir( directory_in_str ):
-                self.timing( file, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0], args.outputDirFlag, args.outputFlag )
+                self.timing( file, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0], args.outputDirFlag, args.outputFlag, args.verbose, args.rejectionFlag )
 
 
         else:
@@ -62,7 +61,7 @@ class ArgumentHandler:
                         line = line.replace( "\n", "" )
 
                         # Calculates the TOAs
-                        self.timing( line, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0], args.outputDirFlag, args.outputFlag )
+                        self.timing( line, args.timingFlag[0], args.tempFlag[0], args.subintFlag[0], args.jumpFlag[0], args.outputDirFlag, args.outputFlag, args.verbose, args.rejectionFlag )
 
                     currentFile.close()
 
@@ -73,7 +72,7 @@ class ArgumentHandler:
     def __str__( self ):
         return self.progname
 
-    @Gooey()
+
     def parser( self, progname ):
 
         """
@@ -99,6 +98,8 @@ class ArgumentHandler:
         parser.add_argument( '-j', '--jump', dest = 'jumpFlag', nargs = '*', default = None, help = 'Jump flag. Optional. Argument takes a string that should correspond to a jump (or other) flag needed on the end of the TOAs.' )
         parser.add_argument( '-od', '--odir', dest = 'outputDirFlag', nargs = '?', default = None, help = 'TOA output directory. Optional. Argument takes a directory to save the TOA file to.' )
         parser.add_argument( '-o', '--output', dest = 'outputFlag', nargs = '?', default = None, help = 'TOA output filename. Optional. Argument takes the filename to save the TOAs to. Without, a default name is used.' )
+        parser.add_argument( '-r', '--reject', dest = 'rejectionFlag', action = 'store_true', default = False, help = 'RFI excision flag. Use flag when you would like to pre-TOA excise sources of RFI.' )
+        parser.add_argument( '-v', '--verbose', dest = 'verbose', action = 'store_true', default = False, help = 'Verbose mode flag. Set this to print more information to the console (for developers).' )
 
 
         args = parser.parse_args()
@@ -106,10 +107,10 @@ class ArgumentHandler:
         return args
 
 
-    def timing( self, input, band, temp, nsubint, jump, saveDir, saveFile ):
+    def timing( self, input, band, temp, nsubint, jump, saveDir, saveFile, verbose, exciseRFI ):
 
         """
         Calls an instance of the Timing class.
         """
 
-        timingObject = Timing( temp, input, band, nsubint, jump, saveDir, saveFile, verbose = False )
+        timingObject = Timing( temp, input, band, nsubint, jump, saveDir, saveFile, verbose, exciseRFI )
