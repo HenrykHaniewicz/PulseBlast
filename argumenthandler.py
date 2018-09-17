@@ -11,15 +11,14 @@ import os
 
 class ArgumentHandler:
 
-    def __init__( self, progname ):
+    def __init__( self ):
 
         """
         Initializes the class using the program name as the argument.
         Initializes command line arguments and error checks.
         """
 
-        # Initialize the program name
-        self.progname = progname
+        progname = 'argumenthandler.py'
 
         # Calls the  parser method in this class
         args = self.parser( progname )
@@ -71,10 +70,10 @@ class ArgumentHandler:
 
 
     def __repr__( self ):
-        return "ArgumentHandler( progname = {} )".format( self.progname )
+        return "ArgumentHandler()"
 
     def __str__( self ):
-        return self.progname
+        return self
 
 
     def parser( self, progname ):
