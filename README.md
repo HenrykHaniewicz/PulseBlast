@@ -41,7 +41,7 @@ The jump flag, `-j`, is used to add a string to the end of each line of the outp
 
 TOAs will be saved in TEMPO2 format to the output path and output filename given however, currently, the telescope name *will* need to be changed by the user to the newly used TEMPO2 codes until I can figure out how to implement this. If no output path is given, the current working directory will be used. If no filename is supplied, a default filename, `PSR_TOAs.toa`, will be used.  
 
-The final two arguments denote the rejection and verbose flag respectively. The rejection flag plus its argument runs an RFI excision algorithm to the number of generations supplied by the user. If no number is supplied after the `-r` flag, an arbitrary default of 6 will be used. The verbose flag, `-v`, if set, will display more detailed information to the user about what is being loaded, how long tasks take, as well as many other features that might be useful for developers.  
+The final two arguments denote the rejection and verbose flag respectively. The rejection flag plus its argument runs an RFI excision algorithm to the number of generations supplied by the user. If `-r` is not set, the timing will happen without any RFI excision. The verbose flag, `-v`, if set, will display more detailed information to the user about what is being loaded, how long tasks take, as well as many other features that might be useful for developers.  
 
 ### **Templates**
 
