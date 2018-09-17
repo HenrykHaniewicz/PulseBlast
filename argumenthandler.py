@@ -36,6 +36,10 @@ class ArgumentHandler:
         if args.jumpFlag is None:
             args.jumpFlag = [ None ]
 
+        # Changes type of the rejection flag to an integer if it exists
+        if args.rejectionFlag is not None:
+            args.rejectionFlag = args.rejectionFlag[0]
+
         # textFile is optional. If no -x flag is provided, uses CWD
         if ( not args.textFile ):
 
@@ -87,7 +91,7 @@ class ArgumentHandler:
                          PulseBlast Argument Handler
                     -------------------------------------
                        Argument handler for PulseBlast
-                                 arguments.
+                             main.py arguments.
                         ''' )
 
         # Arguments list
@@ -98,7 +102,7 @@ class ArgumentHandler:
         parser.add_argument( '-j', '--jump', dest = 'jumpFlag', nargs = '*', default = None, help = 'Jump flag. Optional. Argument takes a string that should correspond to a jump (or other) flag needed on the end of the TOAs.' )
         parser.add_argument( '-od', '--odir', dest = 'outputDirFlag', nargs = '?', default = None, help = 'TOA output directory. Optional. Argument takes a directory to save the TOA file to.' )
         parser.add_argument( '-o', '--output', dest = 'outputFlag', nargs = '?', default = None, help = 'TOA output filename. Optional. Argument takes the filename to save the TOAs to. Without, a default name is used.' )
-        parser.add_argument( '-r', '--reject', dest = 'rejectionFlag', action = 'store_true', default = False, help = 'RFI excision flag. Use flag when you would like to pre-TOA excise sources of RFI.' )
+        parser.add_argument( '-r', '--reject', dest = 'rejectionFlag', nargs = 1, type = int, required = False, default = None, help = 'RFI excision flag. Use flag when you would like to pre-TOA excise sources of RFI.' )
         parser.add_argument( '-v', '--verbose', dest = 'verbose', action = 'store_true', default = False, help = 'Verbose mode flag. Set this to print more information to the console (for developers).' )
 
 

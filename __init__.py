@@ -1,6 +1,6 @@
-__all__ = [ "main", "argumenthandler", "ArgumentHandler", "DataCulling", "DataCull", "PSRTemplate", "Template", "PSRTiming", "Timing", "mathUtils", "otherUtilities", "custom_exceptions", "ArgumentError" ]
+__all__ = [ "main", "argumenthandler", "ArgumentHandler", "DataCulling", "DataCull", "PSRTemplate", "Template", "PSRTiming", "Timing", "mathUtils", "otherUtilities", "pulsarUtilities", "custom_exceptions", "ArgumentError" ]
 
-__version__ = 0.1
+__version__ = 0.2
 
 from argumenthandler import ArgumentHandler
 from DataCulling import DataCull

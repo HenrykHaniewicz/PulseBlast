@@ -75,7 +75,7 @@ def binMaskFromTemplate( template ):
 
     return mask
 
-
+# Returns the mean and RMS of the off-pulse window
 def getBase( profData, duty ):
      # get profile mask to determine off-pulse bins
      mask = binMask( profData, duty )
@@ -90,6 +90,7 @@ def getBase( profData, duty ):
      return baseMean, baseRMS
 
 
+# Returns the profile data minus the baseline
 def removeBase( profData, duty ):
 
      baseline, baseRMS = getBase( profData, duty )

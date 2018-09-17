@@ -31,8 +31,6 @@ class DataCull:
 
     '''
     Main class for data culling pulsar fits files to get a less noisy data set.
-    Calling the class itself simply takes an optional directory and a filename.
-    If no directory is given, the current working directory will be used.
     '''
 
     def __init__( self, filename, template, directory = None, SNLim = 3000, verbose = False ):
@@ -41,11 +39,10 @@ class DataCull:
         Initializes all archives and parameters in the data cube for a given file.
         Also requires a template to be parsed in.
         A custom signal / noise lower bound can also be set on initialization but
-        the default is 3000.
-        This will exit the current archive if the signal / noise ratio is lower
-        than the threshold.
-        One can also set whether long arrays are to be printed in full or in
-        shorthand.
+        the default is 3000. This will exit the current archive if the SNR is
+        lower than the threshold.
+        One can also set whether long arrays and other bits of console text
+        are to be printed in full or in shorthand.
         '''
 
         if verbose:

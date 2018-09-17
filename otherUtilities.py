@@ -10,7 +10,7 @@ import numpy as np
 def zeroWeights( criterion = None, archive = None, verbose = False ):
 
     '''
-    Scans through each sub-integration and channel and zeros any bad scans to zero.
+    Scans through each sub-integration and channel and sets any bad scans to zero.
     '''
 
     if criterion is None:
@@ -23,18 +23,19 @@ def zeroWeights( criterion = None, archive = None, verbose = False ):
             print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
         archive.setWeights( 0, t = time, f = frequency )
 
-
+# Delete and flush the current line on the console
 def restart_line():
      sys.stdout.write( '\r' )
      sys.stdout.flush()
 
+# Simple progress bar
 def display_status( iteration, MAX_ITER ):
     restart_line()
 
     sys.stdout.write('{0:<10d}[{1:>3d}%]'.format( iteration, int( 100 * float( iteration )/float( MAX_ITER ) ) ) )
     sys.stdout.flush()
 
-# Checks if 'file' has extension 'ext' and, if not, adds it.
+
 def addExtension( file, ext ):
 
     '''
@@ -58,7 +59,7 @@ def addExtension( file, ext ):
     return fileout
 
 
-# Formats directories from UI to console
+# Formats directories from GUI output to console. Need to test on Windows...
 def formatMultipleDirectories( args ):
     if platform.system() == 'Darwin' or 'Linux':
         dirs = ' '.join( args )
@@ -74,7 +75,7 @@ def formatMultipleDirectories( args ):
 
     return dirs
 
-
+# Adds the correct separator (based on platform) to the end of the directories parsed.
 def addMultipleDirectoryEndSeparators( dirs, shell ):
     if shell == 'Unix':
         for i, d in enumerate( dirs ):

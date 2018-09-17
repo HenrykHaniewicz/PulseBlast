@@ -21,13 +21,13 @@ class Timing:
     TEMPO2 format, and creating fake TOAs for prediction models based on user defined criteria.
     '''
 
-    def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None, verbose = False, RFI = False ):
+    def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None, verbose = False, RFI = None ):
 
         '''
         Initializes an instance of the class with a required template and a directory or file (collectively known as 'input') to time
         as well as the frequency band as a string, number of time sub-integrations to scrunch to, user defined strings (jump) at the end of
         the TOAs, a directory to save the timing file to and the filename of that file. The jump and save locations are optional. If no save
-        directory is parsed, CWD will be used.
+        directory is parsed, CWD will be used. Finally, one can set the verbose and RFI excision flags.
         '''
 
         # Initialize all parsed parameters as strings. Check for validity of nsubint (in case argparse doesn't)
@@ -85,10 +85,10 @@ class Timing:
         return self.template, self.directory, self.band, self.subint, self.jump, self.saveDirectory, self.toaFile, self.verbose, self.rfi
 
 
-    def getTOAs_dir( self, save = None, exciseRFI = False ):
+    def getTOAs_dir( self, save = None, exciseRFI = None ):
 
         '''
-        Calculate and return Time-of-Arrivals (TOAs) for the given directory.
+        Calculate and return Times-of-Arrival (TOAs) for the given directory.
         Each file can be chosen to undergo RFI excision before TOA calculation.
         '''
 
@@ -137,8 +137,8 @@ class Timing:
                         continue
 
                     # If enabled, perform a standard RFI cull
-                    if exciseRFI:
-                        cullObject.reject( 'chauvenet', 15, self.verbose )
+                    if exciseRFI is not None and isinstance( exciseRFI, int ):
+                        cullObject.reject( 'chauvenet', self.rfi, self.verbose )
 
                     # Check if the band provided matches that in the header
                     if frontend == self.band:
@@ -185,10 +185,10 @@ class Timing:
             u.display_status( i, len( os.listdir( self.directory ) ) )
 
 
-    def getTOAs_file( self, save = None, exciseRFI = False ):
+    def getTOAs_file( self, save = None, exciseRFI = None ):
 
         '''
-        Calculate and return Time-of-Arrivals (TOAs) for the given file.
+        Calculate and return Times-of-Arrivals (TOAs) for the given file.
         Each file can be chosen to undergo RFI excision before TOA calculation.
         '''
 
@@ -232,8 +232,8 @@ class Timing:
                     pass
 
                 # If enabled, perform a standard RFI cull
-                if exciseRFI:
-                    cullObject.reject( 'chauvenet', 15, self.verbose )
+                if exciseRFI is not None and isinstance( exciseRFI, int ):
+                    cullObject.reject( 'chauvenet', self.rfi, self.verbose )
 
                 # Check if the band provided matches that in the header
                 if frontend == self.band:

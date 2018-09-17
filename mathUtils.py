@@ -21,8 +21,8 @@ def chauvenet( array, mean = 0, stddev = 1, threshold = 3.0 ):
     '''
     Returns a boolean array of the same shape as the input array based on the
     Chauvenet outlier criterion.
-    Default values for the mean and stddev are given but it is more useful to use
-    values calculates from your array.
+    Default values for the mean and stddev are for a normalized Gaussian but
+    it is more useful to use values calculated from your array.
     '''
 
     absDiff = abs( array - mean )
@@ -33,7 +33,7 @@ def chauvenet( array, mean = 0, stddev = 1, threshold = 3.0 ):
 def doubleMAD( vector, threshold = 3.5 ):
 
     '''
-    Returns a boolean array comparing the MZS to the given threshold factor.
+    Returns a boolean array comparing the Modified Z-Score (MZS) to the given threshold factor.
     Only works with 1D arrays (vectors) but can be iterated over for multiple distributions.
     A return of True implies an outlying data point.
     '''

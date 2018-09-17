@@ -214,6 +214,7 @@ class Template:
         if verbose:
             print( "{} template profile created...".format( self.band ) )
         else:
+            print( "" )
             print( "Done" )
         return self.templateProfile
 
@@ -272,9 +273,10 @@ if __name__ == "__main__":
 
 
             # Arguments list
-            parser.add_argument( '-b', dest = 'band', metavar = 'Frequency Band', nargs = 1, default = None, help = 'Frequency band of observation. This should match the band string in the PSRFITS file.' )
-            parser.add_argument( '-o', dest = 'outputfile', metavar = 'Output File', nargs = 1, default = None, widget = 'FileSaver', help = 'Name of the output file and path (select). Standard extention is .npy but any other extension can overwrite this.' )
-            parser.add_argument( '-d', dest = 'directories', metavar = 'Directories List', nargs = '*', default = None, widget = 'MultiDirChooser', help = 'Directories to search for PSRFITS files in. Directories should be seperated by a space' )
+            parser.add_argument( '-b', dest = 'band', metavar = 'Frequency Band', nargs = 1, default = None, help = 'Frequency band of observation.' )
+            parser.add_argument( '-o', dest = 'outputfile', metavar = 'Output File', nargs = 1, default = None, widget = 'FileSaver', help = 'Name of the output file and path.' )
+            parser.add_argument( '-d', dest = 'directories', metavar = 'Directories List', nargs = '*', default = None, widget = 'MultiDirChooser', help = 'Directories to search for PSRFITS files in.' )
+            parser.add_argument( '-v', dest = 'verbose', metavar = 'Verbose Mode', action = 'store_true', default = False, help = 'Prints information to the console.' )
 
             args = parser.parse_args()
 
@@ -295,7 +297,7 @@ if __name__ == "__main__":
 
             # Initialize the template class object as normal and run the template creation script
             templateObject = Template( args.band[0], *idirs )
-            templateObject.createTemplate( ofile, odir )
+            templateObject.createTemplate( ofile, odir, args.verbose )
 
     # If the UI package is unavailable
     else:
@@ -308,9 +310,10 @@ if __name__ == "__main__":
                             Argument handler for PulseBlast Templates
                                 ''' )
 
-            parser.add_argument( '-b', dest = 'band', metavar = 'Frequency Band', nargs = 1, default = None, help = 'Frequency band of observation. This should match the band string in the PSRFITS file.' )
-            parser.add_argument( '-o', dest = 'outputfile', metavar = 'Output File', nargs = 1, default = None, help = 'Name of the output file and path. Standard extention is .npy but any other extension can overwrite this.' )
-            parser.add_argument( '-d', dest = 'directories', metavar = 'Directories List', nargs = '*', default = None, help = 'Directories to search for PSRFITS files in. Directories should be seperated by a space' )
+            parser.add_argument( '-b', dest = 'band', metavar = 'Frequency Band', nargs = 1, default = None, help = 'Frequency band of observation.' )
+            parser.add_argument( '-o', dest = 'outputfile', metavar = 'Output File', nargs = 1, default = None, help = 'Name of the output file and path.' )
+            parser.add_argument( '-d', dest = 'directories', metavar = 'Directories List', nargs = '*', default = None, help = 'Directories to search for PSRFITS files in.' )
+            parser.add_argument( '-v', dest = 'verbose', metavar = 'Verbose Mode', action = 'store_true', default = False, help = 'Prints information to the console.' )
 
             args = parser.parse_args()
 
@@ -331,7 +334,7 @@ if __name__ == "__main__":
 
             # Initialize the template class object as normal and run the template creation script
             templateObject = Template( args.band[0], *idirs )
-            templateObject.createTemplate( ofile, odir )
+            templateObject.createTemplate( ofile, odir, args.verbose )
 
 
     # Run the main function
