@@ -2,9 +2,9 @@
 # Henryk T. Haniewicz, 2018
 
 # Local imports
-import mathUtils as mathu
-import pulsarUtilities as pu
-import otherUtilities as u
+import utils.mathUtils as mathu
+import utils.pulsarUtilities as pu
+import utils.otherUtilities as u
 
 # PyPulse imports
 from pypulse.archive import Archive

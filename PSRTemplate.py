@@ -2,7 +2,7 @@
 # Henryk T. Haniewicz, 2018
 
 # Local imports
-import otherUtilities as u
+import utils.otherUtilities as u
 
 # PyPulse imports
 from pypulse.archive import Archive

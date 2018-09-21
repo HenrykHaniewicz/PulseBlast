@@ -4,7 +4,7 @@
 # Local imports
 from DataCulling import DataCull
 from custom_exceptions import *
-import otherUtilities as u
+import utils.otherUtilities as u
 
 # Other imports
 import os
