@@ -3,7 +3,7 @@
 # Imports
 import numpy as np
 import math
-import mathUtils as mu
+import utils.mathUtils as mu
 
 # Functions
 
