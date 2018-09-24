@@ -1,1 +1,1 @@
-from argumenthandler import ArgumentHandler; ArgumentHandler()
+import argumenthandler; argumenthandler.ArgumentHandler()
