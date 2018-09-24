@@ -55,7 +55,7 @@ The GUI is a simple field based argument handler to select files and directories
 If you are running Python in a [virtual environment](https://docs.python.org/3/tutorial/venv.html "Virtual environment documentation") within the shell, you will need to make you're running a **framework version** of Python. To do this, edit the [fwpy](https://github.com/HenrykHaniewicz/PulseBlast/blob/master/fwpy "Framework bash file") file as necessary and paste it into the directory where your Python executable is. Once this is done, make sure `fwpy` has executable permissions. You can set this as follows:
 
 ```shell
-chmod a+w fwpy
+chmod a+x fwpy
 ```
 
 To run the program in GUI mode, provided you have followed the setup above, type the command:
