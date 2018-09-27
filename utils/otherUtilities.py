@@ -107,3 +107,11 @@ def addDirectoryEndSeparators( dir, dirs ):
         raise OSError( "Could not determine OS." )
 
     return directory, directories
+
+
+def check_kwarg( action, *args, **kwargs ):
+
+    for argument in args:
+
+        if not argument in kwargs:
+            keyword == action
