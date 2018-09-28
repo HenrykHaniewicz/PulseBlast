@@ -122,23 +122,85 @@ def loadContourArrays( fileprefix ):
     return p_out
 
 
-# def plot_contour_pdf(x_val, y_val, contour_data, n_steps=32,\
-#                          norm=False, weights=None, \
-#                          canvassize=None, xticks=True, yticks=True, \
-#                          xlabel=True, ylabel=True, linecolour='black', \
-#                          xlim=None, ylim=None, figtext=None, figtextsize=16, \
-#                          hgrid=False, vgrid=False,
-#                          ticklabelsize=18, axislabelsize=18):
+def get_prob_2D_levels( z, prob_intervals, norm = False, n_steps = 64, weights = None ):
+
+    """
+    Calculates the confidence levels of a set of data
+    """
+
+
+# If weights are None, assign them to ones, with the same shape as the
+# input z array:
+    if weights is None:
+        weights = np.ones_like( z, dtype = float )
+# If weights are given, ensure they are the same shape as z:
+    else:
+        if weights.shape is not z.shape:
+            print( 'Shape of weight array ', weights.shape, ' does not match the input data array ', z.shape )
+            return None
+
+# Do normalization
+    if norm is True:
+        z = (z*weights) / np.sum( z*weights )
+# Find maximum value of normalized 2D probability function
+    z_max = np.amax( z )
+# Set up contour_levels array
+    contour_level = np.zeros_like( prob_intervals ) # Ensures same dimenstions
+
+# Initialize step size to half the maximum probability value, as well as
+# intial pdf value
+    step_size = z_max / 2
+    z_level = z_max - step_size
+
+# Now, for each of the given contour levels, determine z level that corresponds to
+# an enclosed probability of that contour level.  Do this by stepping around the
+# final value until we arrive at the step threshold.
+    for i_prob in np.arange( len( prob_intervals ) ):
+# Run through number of steps given by user, dividing in half each time
+        for i_step in np.arange( n_steps ):
+            test_ind = np.where( z >= z_level )
+            test_prob = np.sum( z[test_ind]*weights[test_ind] )
+            step_size = step_size / 2
+            if test_prob > prob_intervals[i_prob]:
+                z_level += step_size
+            else:
+                z_level -= step_size
+# Now reset step_size to half the current prob interval (e.g. 0.683, 0.954, 0.9973)
+        step_size = z_level / 2
+# Now that we have gone down to desired step threshold, set current z_level to
+# the level corresponding to desired current interval in loop
+        contour_level[i_prob] = z_level
+
+
+    return contour_level
+
+
 
 def plot_contour_pdf( x_val, y_val, contour_data, n_steps = 64, linecolour = 'black', **kwargs ):
 
+    """
+    Plots confidence contour maps of one array compared to another
+    """
+
+    # Check for default kwargs
     u.check_kwarg( None, 'weights', 'canvassize', 'xlim', 'ylim', 'figtext', **kwargs )
     u.check_kwarg( True, 'xticks', 'yticks', 'xlabel', 'ylabel', **kwargs )
     u.check_kwarg( False, 'norm', 'hgrid', 'vgrid', **kwargs )
     u.check_kwarg( 16, 'figtextsize', **kwargs )
     u.check_kwarg( 18, 'ticklabelsize', 'axislabelsize', **kwargs )
     u.check_kwarg( 35, 'xstart', 'xend', 'ystart', 'yend', **kwargs )
+    u.check_kwarg( 1, 'xscale', 'yscale', **kwargs )
 
+
+    # Modify limits and scales for plots
+    xlim = np.asarray(xlim)
+    ylim = np.asarray(ylim)
+
+    xlim_scale = xlim / xscale
+    ylim_scale = ylim / yscale
+
+    x_val_scale = x_val / xscale
+    y_val_scale = y_val / yscale
 
 # If weights are None, assign them to ones, with the same shape as the
 # input z array:
@@ -168,11 +230,11 @@ def plot_contour_pdf( x_val, y_val, contour_data, n_steps = 64, linecolour = 'bl
     if xlim is None:
         ax.set_xlim( xmin - 0.01*xspan, xmax + 0.02*xspan )
     else:
-        ax.set_xlim( xlim )
+        ax.set_xlim( xlim_scale )
     if ylim is None:
         ax.set_ylim( ymin - 0.01*yspan, ymax + 0.02*yspan )
     else:
-        ax.set_ylim( ylim )
+        ax.set_ylim( ylim_scale )
 
     if xlabel is not None:
         ax.set_xlabel( xlabel, fontsize = axislabelsize, labelpad = 12 )
@@ -207,14 +269,8 @@ def plot_contour_pdf( x_val, y_val, contour_data, n_steps = 64, linecolour = 'bl
         z_val = contour_data
 
 # Now plot the pdf data
-    ax.contour( x_val, y_val, z_val, levels = np.flip( contour_level, axis = 0 ), colors = ( 'red', 'blue', 'green' ) )
+    ax.contour( x_val_scale, y_val_scale, z_val, levels = np.flip( contour_level, axis = 0 ), colors = ( 'red', 'blue', 'green' ) )
 
     if figtext is not None:
         for txt in figtext:
             ax.text( txt[0], txt[1], txt[2], fontsize = figtextsize, horizontalalignment = 'center', verticalalignment = 'center' )
-
-
-
-def get_prob_2D_levels( z, prob_intervals, norm = False, n_steps = 64, weights = None ):
-
-    
