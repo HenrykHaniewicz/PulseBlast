@@ -1,1 +1,1 @@
-import argumenthandler; argumenthandler.ArgumentHandler()
+import argumenthandler as a; a.ArgumentHandler()
