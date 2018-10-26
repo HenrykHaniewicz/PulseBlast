@@ -18,6 +18,7 @@ import scipy.optimize as opt
 
 # Other imports
 import numpy as np
+from scipy.fftpack import fft
 import math
 import os
 
@@ -131,6 +132,8 @@ class DataCull:
 
         # Initialize the completion flag to false
         self.rejectionCompletionFlag = False
+
+        self.fourierTransformRejection( showPlots )
 
         for i in np.arange( iterations ):
 
@@ -254,6 +257,50 @@ class DataCull:
 
         # Returns the masked RMS matrix
         return rmsMatrix
+
+
+    def fourierTransformRejection( self, showTempPlot = False ):
+
+        '''
+        Uses FFT (Fast Fourier Transform) to get the break-down of signals in the
+        profile and compares to the the template.
+        '''
+
+        # Re-load the data cube
+        data = self.ar.getData()
+        tempData = self.template
+
+        # Set up arrays for FFT
+        profFFT = np.zeros_like( data )
+        tempFFT = fft( tempData )
+
+        # Normalize the template array w.r.t the max value
+        tempFFT = mathu.normalizeToMax( tempFFT.T )
+
+        if showTempPlot:
+            plt.plot( tempFFT )
+            plt.show()
+            plt.close()
+
+        # Loop over the time and frequency indices (subints and channels)
+        for time in np.arange( self.ar.getNsubint() ):
+            for frequency in np.arange( self.ar.getNchan() ):
+
+                # FFT and normalize profile
+                profFFT[time][frequency] = fft( data[time][frequency] )
+                profFFT[time][frequency] = mathu.normalizeToMax( profFFT[time][frequency].T )
+
+                # Check if profile FT matches template FT
+                test = ( profFFT[time][frequency] == tempFFT ).any().astype( int )    # REALLY BAD rejection criterion here!
+
+                if test == False:
+                    if self.verbose:
+                        print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+                    self.ar.setWeights( 0, t = time, f = frequency )
+
+        # Re-load the data cube
+        self.data = self.ar.getData()
+
 
 
     def binShiftRejection( self, showPlot = False ):

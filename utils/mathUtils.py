@@ -16,6 +16,15 @@ def rootMeanSquare( array ):
     return rms
 
 
+def normalizeToMax( array ):
+
+    '''
+    Divides all elements in an array by max value in that column
+    '''
+
+    return ( array / ( np.max( array, 0 ) + np.spacing( 0 ) ) )
+
+
 def chauvenet( array, mean = 0, stddev = 1, threshold = 3.0 ):
 
     '''
