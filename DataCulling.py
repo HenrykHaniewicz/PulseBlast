@@ -259,7 +259,7 @@ class DataCull:
         return rmsMatrix
 
 
-    def fourierTransformRejection( self, showTempPlot = False ):
+    def fourierTransformRejection( self, showTempPlot = False, offset = 0 ):
 
         '''
         Uses FFT (Fast Fourier Transform) to get the break-down of signals in the
@@ -275,7 +275,9 @@ class DataCull:
         tempFFT = fft( tempData )
 
         # Normalize the template array w.r.t the max value
-        tempFFT = mathu.normalizeToMax( tempFFT.T )
+        tempFFT = abs( mathu.normalizeToMax( abs( tempFFT.T ) ) )
+
+        tempFFT = np.roll( tempFFT, offset )
 
         if showTempPlot:
             plt.plot( tempFFT )
@@ -288,7 +290,9 @@ class DataCull:
 
                 # FFT and normalize profile
                 profFFT[time][frequency] = fft( data[time][frequency] )
-                profFFT[time][frequency] = mathu.normalizeToMax( profFFT[time][frequency].T )
+                profFFT[time][frequency] = abs( mathu.normalizeToMax( abs( profFFT[time][frequency].T ) ) )
+
+                profFFT[time][frequency] = np.roll( profFFT[time][frequency], offset )
 
                 # Check if profile FT matches template FT
                 test = ( profFFT[time][frequency] == tempFFT ).any().astype( int )    # REALLY BAD rejection criterion here!
@@ -297,6 +301,8 @@ class DataCull:
                     if self.verbose:
                         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
                     self.ar.setWeights( 0, t = time, f = frequency )
+
+        # Maybe some opw RMS rejection on FT compared with template?
 
         # Re-load the data cube
         self.data = self.ar.getData()
