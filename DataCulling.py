@@ -18,7 +18,7 @@ import scipy.optimize as opt
 
 # Other imports
 import numpy as np
-from scipy.fftpack import fft
+from scipy.fftpack import fft, fftshift
 import math
 import os
 
@@ -292,7 +292,11 @@ class DataCull:
                 profFFT[time][frequency] = fft( data[time][frequency] )
                 profFFT[time][frequency] = abs( mathu.normalizeToMax( abs( profFFT[time][frequency].T ) ) )
 
-                profFFT[time][frequency] = np.roll( profFFT[time][frequency], offset )
+                profFFT[time][frequency] = fftshift( profFFT[time][frequency] )
+
+                plt.plot( profFFT[time][frequency] )
+                plt.show()
+                plt.close()
 
                 # Check if profile FT matches template FT
                 test = ( profFFT[time][frequency] == tempFFT ).any().astype( int )    # REALLY BAD rejection criterion here!
