@@ -5,6 +5,7 @@ import sys
 import os
 import platform
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def zeroWeights( criterion = None, archive = None, verbose = False ):
@@ -34,6 +35,15 @@ def display_status( iteration, MAX_ITER ):
 
     sys.stdout.write('{0:<10d}[{1:>3d}%]'.format( iteration, int( 100 * float( iteration )/float( MAX_ITER ) ) ) )
     sys.stdout.flush()
+
+# (conv function) Plots and shows a vector and maybe a curve or two using matplotlib then frees up memory
+def plotAndShow( vector, *curves ):
+    plt.plot( vector )
+    if curves:
+        for curve in curves:
+            plt.plot( curve, color = 'r--' )
+    plt.show()
+    plt.close()
 
 
 def addExtension( file, ext ):

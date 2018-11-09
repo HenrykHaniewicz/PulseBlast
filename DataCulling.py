@@ -2,9 +2,9 @@
 # Henryk T. Haniewicz, 2018
 
 # Local imports
-import utils.mathUtils as mathu
 import utils.pulsarUtilities as pu
 import utils.otherUtilities as u
+import utils.mathUtils as mathu
 
 # PyPulse imports
 from pypulse.archive import Archive
@@ -133,7 +133,7 @@ class DataCull:
         # Initialize the completion flag to false
         self.rejectionCompletionFlag = False
 
-        self.fourierTransformRejection( showPlots )
+        #self.fourierTransformRejection( showPlots )
 
         for i in np.arange( iterations ):
 
@@ -259,7 +259,7 @@ class DataCull:
         return rmsMatrix
 
 
-    def fourierTransformRejection( self, showTempPlot = False, offset = 0 ):
+    def fourierTransformRejection( self, showTempPlot = False, showOtherPlots = False, offset = 0 ):
 
         '''
         Uses FFT (Fast Fourier Transform) to get the break-down of signals in the
@@ -277,12 +277,10 @@ class DataCull:
         # Normalize the template array w.r.t the max value
         tempFFT = abs( mathu.normalizeToMax( abs( tempFFT.T ) ) )
 
-        tempFFT = np.roll( tempFFT, offset )
+        tempFFT = fftshift( tempFFT )
 
         if showTempPlot:
-            plt.plot( tempFFT )
-            plt.show()
-            plt.close()
+            u.plotAndShow( tempFFT )
 
         # Loop over the time and frequency indices (subints and channels)
         for time in np.arange( self.ar.getNsubint() ):
@@ -294,9 +292,8 @@ class DataCull:
 
                 profFFT[time][frequency] = fftshift( profFFT[time][frequency] )
 
-                plt.plot( profFFT[time][frequency] )
-                plt.show()
-                plt.close()
+                if showOtherPlots:
+                    u.plotAndShow( profFFT[time][frequency] )
 
                 # Check if profile FT matches template FT
                 test = ( profFFT[time][frequency] == tempFFT ).any().astype( int )    # REALLY BAD rejection criterion here!

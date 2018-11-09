@@ -21,7 +21,7 @@ class Timing:
     TEMPO2 format, and creating fake TOAs for prediction models based on user defined criteria.
     '''
 
-    def __init__( self, template, input, band, nsubint, jump = None, saveDirectory = None, toaFile = None, verbose = False, RFI = None ):
+    def __init__( self, template, input, band, nsubint, nsubfreq, jump = None, saveDirectory = None, toaFile = None, verbose = False, RFI = None ):
 
         '''
         Initializes an instance of the class with a required template and a directory or file (collectively known as 'input') to time
@@ -67,6 +67,7 @@ class Timing:
             raise ValueError( "nsubint cannot be less than 1. Currently: {}".format( nsubint ) )
 
         self.nsubint = nsubint
+        self.nsubfreq = nsubfreq
 
         # Determine which version of getTOAs is needed (likely to change)
         if os.path.isdir( self.directory ):
@@ -79,10 +80,10 @@ class Timing:
 
 
     def __repr__( self ):
-        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {}, jump = {}, saveDirectory = {}, toaFile = {}, verbose = {}, RFI = {} )".format( self.template, self.directory, self.band, self.nsubint, self.jump, self.saveDirectory. self.toaFile, self.verbose, self.rfi )
+        return "Timing( template = {}, file / directory = {}, frequencyBand = {}, nsubint = {}, nsubfreq = {}, jump = {}, saveDirectory = {}, toaFile = {}, verbose = {}, RFI = {} )".format( self.template, self.directory, self.band, self.nsubint, self.nsubfreq, self.jump, self.saveDirectory. self.toaFile, self.verbose, self.rfi )
 
     def __str__( self ):
-        return self.template, self.directory, self.band, self.subint, self.jump, self.saveDirectory, self.toaFile, self.verbose, self.rfi
+        return self.template, self.directory, self.band, self.nsubint, self.nsubfreq, self.jump, self.saveDirectory, self.toaFile, self.verbose, self.rfi
 
 
     def getTOAs_dir( self, save = None, exciseRFI = None ):
@@ -145,7 +146,7 @@ class Timing:
 
                         # Scrunch factors. For TOAs, nchan should be 1 and nsubint is defined in class initialization
                         cullObject.ar.tscrunch( nsubint = self.nsubint )
-                        cullObject.ar.fscrunch( nchan = 1 )
+                        cullObject.ar.fscrunch( nchan = self.nsubfreq )
 
                         # Function to return the TOAs
                         cullObject.ar.time( cullObject.template, filename = save, MJD = True, flags = self.jump, appendto = True )
@@ -240,7 +241,7 @@ class Timing:
 
                     # Scrunch factors. For TOAs, nchan should be 1 and nsubint is defined in class initialization
                     cullObject.ar.tscrunch( nsubint = self.nsubint )
-                    cullObject.ar.fscrunch( nchan = 1 )
+                    cullObject.ar.fscrunch( nchan = self.nsubfreq )
 
                     # Function to return TOAs
                     cullObject.ar.time( cullObject.template, filename = self.savePath, MJD = True, flags = self.jump, appendto = True )

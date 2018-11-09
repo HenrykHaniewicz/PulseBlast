@@ -22,7 +22,7 @@ test -f ~/.bashrc && source ~/.bashrc
 To get Times-of-Arrival (TOAs), run the following command in the terminal:
 
 ```shell
-python main.py -x [text_files_containing_directories_and_/_or_files] -t [frequency_band] --temp [full_path_to_template] -s [sub-integrations_to_scrunch_to] -j [jump_after_fluxerr] -od [toa_output_file_directory] -o [toa_output_filename] -r [number_of_generations] -v
+python main.py -x [text_files_containing_directories_and_/_or_files] -t [frequency_band] --temp [full_path_to_template] -s [sub-integrations_to_scrunch_to] -n [sub-bands_to_scrunch_to] -j [jump_after_fluxerr] -od [toa_output_file_directory] -o [toa_output_filename] -r [number_of_generations] -v
 ```
 
 Text files should only contain directories (ending in a "/") or files (ending in a ".???"). E.g. `input.txt`:
