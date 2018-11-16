@@ -3,6 +3,7 @@
 
 # Imports
 import numpy as np
+from custom_exceptions import DimensionError
 
 # Functions
 
@@ -14,6 +15,54 @@ def rootMeanSquare( array ):
 
     rms = np.sqrt( np.mean( np.power( array, 2 ) ) )
     return rms
+
+
+def rmsMatrix2D( array, mask = None, nanmask = False ):
+
+    '''
+    Creates an array of RMS values given a 3D array of data with the first two
+    dimensions forming the output matrix and the 3rd dimension containing the
+    independent axis.
+    '''
+
+    if array.ndim is not 3:
+        raise DimensionError( "Input array must be 3 dimensional." )
+
+    width, height, depth = array.shape
+
+    if mask is not None:
+        if not isinstance( mask, np.ndarray ):
+            raise TypeError( "Mask must be an array." )
+        elif mask.ndim is not 1:
+            raise DimensionError( "Mask must be an array of dimension 1." )
+        elif depth != len( mask ):
+            raise ValueError( "Independent dimension and mask must have same length." )
+
+    # Initialize RMS table of zeros
+    r = np.zeros( ( width, height ), dtype = float )
+
+    # Initialize the mask array along the 3rd axis
+    if mask is None:
+        m = np.zeros( depth, dtype = int )
+    else:
+        m = mask
+
+    # Loop over the other two dimensions
+    for i in np.arange( width ):
+        for j in np.arange( height ):
+
+            # Calculate the RMS of the array everywhere the mask is 0
+            r[i][j] = rootMeanSquare( array[i][j][m == 0] )
+
+            if all( amp == 0 for amp in array[i][j] ):
+                r[i][j] = np.nan
+
+    # Mask the nan values in the array for potential plotting if needed
+    if nanmask:
+        r = np.ma.array( r, mask = np.isnan( r ) )
+
+    # Returns the RMS matrix
+    return r
 
 
 def normalizeToMax( array ):
