@@ -7,3 +7,10 @@ class ArgumentError( Exception ):
 
     def __init__( self, message ):
         self.message = message
+
+class DimensionError( Exception ):
+
+    "Raise when the number of dimensions in an array is not desired."
+
+    def __init__( self, message ):
+        self.message = message
