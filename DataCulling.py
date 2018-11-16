@@ -21,6 +21,7 @@ import numpy as np
 from scipy.fftpack import fft, fftshift
 import math
 import os
+import sys
 
 # Filter various annoying warnings (such as "cannot perform >= np.nan"). We know already...
 import warnings
@@ -183,8 +184,10 @@ class DataCull:
         # Re-load the data cube for the file
         self.data = self.ar.getData()
 
+        templateMask = pu.binMaskFromTemplate( self.template )
+
         # Return the array of RMS values for each profile
-        rmsArray = self.createRmsMatrix()
+        rmsArray = mathu.rmsMatrix2D( self.data, mask = templateMask, nanmask = True )
 
         # Reshape RMS array to be linear and store in a new RMS array
         linearRmsArray = np.reshape( rmsArray, ( self.ar.getNchan() * self.ar.getNsubint() ) )
@@ -215,9 +218,6 @@ class DataCull:
 
         # Set the weights of potential noise in each profile to 0
         u.zeroWeights( rejectionCriterion, self.ar, self.verbose )
-        # for time, frequency in zip( np.where( rejectionCriterion )[0], np.where( rejectionCriterion )[1] ):
-        #     print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-        #     self.ar.setWeights( 0, t = time, f = frequency )
 
         # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
         if( len( np.where( rejectionCriterion )[0] ) == 0 ):
@@ -227,39 +227,7 @@ class DataCull:
             print( "Data rejection cycle complete..." )
 
 
-    def createRmsMatrix( self ):
-
-        '''
-        Creates an array of RMS values for each profile in one file.
-        '''
-
-        # Initialize RMS table of zeros
-        rmsMatrix = np.zeros( ( self.ar.getNsubint(), self.ar.getNchan() ), dtype = float )
-
-        # Create a mask along the bin space on the template profile
-        mask = pu.binMaskFromTemplate( self.template )
-
-        # Loop over the time and frequency indices (subints and channels)
-        for time in np.arange( self.ar.getNsubint() ):
-            for frequency in np.arange( self.ar.getNchan() ):
-
-                # Calculate the RMS of the off-pulse region and assign it to the relevant index
-                rmsMatrix[time][frequency] = mathu.rootMeanSquare( self.data[time][frequency][mask == 0] )
-
-                if all( amp == 0 for amp in self.data[time][frequency] ):
-                    rmsMatrix[time][frequency] = np.nan
-
-        # Mask the nan values in the array so that histogramPlot doesn't malfunction
-        rmsMatrix = np.ma.array( rmsMatrix, mask = np.isnan( rmsMatrix ) )
-
-        if self.verbose:
-            print( "Root Mean Square matrix successfully created..." )
-
-        # Returns the masked RMS matrix
-        return rmsMatrix
-
-
-    def fourierTransformRejection( self, showTempPlot = False, showOtherPlots = False, offset = 0 ):
+    def fourierTransformRejection( self, showTempPlot = False, showOtherPlots = False ):
 
         '''
         Uses FFT (Fast Fourier Transform) to get the break-down of signals in the
@@ -348,16 +316,6 @@ class DataCull:
         u.zeroWeights( rejectionCriterionS, self.ar, self.verbose )
         u.zeroWeights( rejectionCriterionE, self.ar, self.verbose )
 
-        # for time, frequency in zip( np.where( rejectionCriterionS )[0], np.where( rejectionCriterionS )[1] ):
-        #     if self.verbose:
-        #         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-        #     self.ar.setWeights( 0, t = time, f = frequency )
-        #
-        # for time, frequency in zip( np.where( rejectionCriterionE )[0], np.where( rejectionCriterionE )[1] ):
-        #     if self.verbose:
-        #         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
-        #     self.ar.setWeights( 0, t = time, f = frequency )
-
         # Checks to see if there were any data to reject. If this array has length 0, all data was good and the completion flag is set to true.
         if len( np.where( rejectionCriterionS )[0] ) == 0 and len( np.where( rejectionCriterionE )[0] ) == 0:
             self.rejectionCompletionFlag = True
@@ -377,8 +335,10 @@ class DataCull:
         # Re-load the data cube
         self.data = self.ar.getData()
 
+        templateMask = pu.binMaskFromTemplate( self.template )
+
         # Return the array of RMS values for each profile
-        rmsArray = self.createRmsMatrix()
+        rmsArray = mathu.rmsMatrix2D( self.data, mask = templateMask, nanmask = True )
 
         # Initialize the bin shifts and bin shift errors
         nBinShift = np.zeros( ( self.ar.getNsubint(), self.ar.getNchan() ), dtype = float )
