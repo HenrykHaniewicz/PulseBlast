@@ -137,12 +137,12 @@ class Timing:
                     if cullObject.SNError:
                         continue
 
-                    # If enabled, perform a standard RFI cull
-                    if exciseRFI is not None and isinstance( exciseRFI, int ):
-                        cullObject.reject( 'chauvenet', self.rfi, self.verbose )
-
                     # Check if the band provided matches that in the header
                     if frontend == self.band:
+
+                        # If enabled, perform a standard RFI cull
+                        if exciseRFI is not None and isinstance( exciseRFI, int ):
+                            cullObject.reject( 'chauvenet', self.rfi, self.verbose )
 
                         # Scrunch factors. For TOAs, nchan should be 1 and nsubint is defined in class initialization
                         cullObject.ar.tscrunch( nsubint = self.nsubint )
@@ -232,12 +232,12 @@ class Timing:
                 if cullObject.SNError:
                     pass
 
-                # If enabled, perform a standard RFI cull
-                if exciseRFI is not None and isinstance( exciseRFI, int ):
-                    cullObject.reject( 'chauvenet', self.rfi, self.verbose )
-
                 # Check if the band provided matches that in the header
                 if frontend == self.band:
+
+                    # If enabled, perform a standard RFI cull
+                    if exciseRFI is not None and isinstance( exciseRFI, int ):
+                        cullObject.reject( 'chauvenet', self.rfi, self.verbose )
 
                     # Scrunch factors. For TOAs, nchan should be 1 and nsubint is defined in class initialization
                     cullObject.ar.tscrunch( nsubint = self.nsubint )
