@@ -46,11 +46,12 @@ def plotAndShow( vector, *curves ):
     plt.close()
 
 
-def addExtension( file, ext ):
+def addExtension( file, ext, save = False, overwrite = False ):
 
     '''
     Add any desired extension to a file that doesn't have one.
-    If the file does, that extension will be used instead.
+    If the file does, that extension will be used instead unless overwrite is
+    checked.
     '''
 
     if not isinstance( ext, str ):
@@ -60,11 +61,15 @@ def addExtension( file, ext ):
     root, end = os.path.splitext( file )
 
     # If file extension does not exist, add the extension
-    if not end:
+    if (not end) or overwrite:
         end = '.' + ext
         fileout = root + end
     else:
         fileout = file
+
+    # Rename the file in os if enabled
+    if save:
+        os.rename( file, fileout )
 
     return fileout
 
