@@ -117,7 +117,7 @@ class DataCull:
         return template
 
 
-    def reject( self, criterion = 'chauvenet', iterations = 1, showPlots = False ):
+    def reject( self, criterion = 'chauvenet', iterations = 1, fourier = True, rms = True, binShift = True, showPlots = False ):
 
         '''
         Performs the rejection algorithm until the number of iterations has been
@@ -134,40 +134,52 @@ class DataCull:
         # Initialize the completion flag to false
         self.rejectionCompletionFlag = False
 
-        #self.fourierTransformRejection( showPlots )
+        if fourier:
+            if self.verbose:
+                print( "Beginning FFT data rejection..." )
+            self.fourierTransformRejection( criterion, showPlots, showPlots )
 
-        for i in np.arange( iterations ):
 
-            self.rmsRejection( criterion, showPlots )
+        if rms:
+            if self.verbose:
+                print( "Beginning RMS data rejection..." )
 
-            # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
-            if self.rejectionCompletionFlag:
-                generation = i + 1
-                if self.verbose:
-                    print( "RMS data rejection for {} complete after {} generations...".format( self.filename, generation ) )
-                break
+            for i in np.arange( iterations ):
 
-        # If the completion flag is still false, the cycles finished before full excision
-        if self.verbose and not self.rejectionCompletionFlag:
-            print( "Maximum number of iterations ({}) completed...".format( iterations ) )
+                self.rmsRejection( criterion, showPlots )
 
-        # Re-initialize the completion flag to false
-        self.rejectionCompletionFlag = False
+                # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
+                if self.rejectionCompletionFlag:
+                    generation = i + 1
+                    if self.verbose:
+                        print( "RMS data rejection for {} complete after {} generations...".format( self.filename, generation ) )
+                    break
 
-        for i in np.arange( iterations ):
+            # If the completion flag is still false, the cycles finished before full excision
+            if self.verbose and not self.rejectionCompletionFlag:
+                print( "Maximum number of iterations ({}) completed...".format( iterations ) )
 
-            self.binShiftRejection( showPlots )
+            # Re-initialize the completion flag to false
+            self.rejectionCompletionFlag = False
 
-            # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
-            if self.rejectionCompletionFlag == True:
-                generation = i + 1
-                if self.verbose:
-                    print( "Bin shift data rejection for {} complete after {} generations...".format( self.filename, generation ) )
-                break
+        if binShift:
+            if self.verbose:
+                print( "Beginning bin shift data rejection..." )
 
-        # If the completion flag is still false, the cycles finished before full excision
-        if self.verbose and not self.rejectionCompletionFlag:
-            print( "Maximum number of iterations ({}) completed...".format( iterations ) )
+                for i in np.arange( iterations ):
+
+                    self.binShiftRejection( showPlots )
+
+                    # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
+                    if self.rejectionCompletionFlag == True:
+                        generation = i + 1
+                        if self.verbose:
+                            print( "Bin shift data rejection for {} complete after {} generations...".format( self.filename, generation ) )
+                        break
+
+            # If the completion flag is still false, the cycles finished before full excision
+            if self.verbose and not self.rejectionCompletionFlag:
+                print( "Maximum number of iterations ({}) completed...".format( iterations ) )
 
 
         # Re-load the data cube for the file
@@ -186,14 +198,7 @@ class DataCull:
 
         templateMask = pu.binMaskFromTemplate( self.template )
 
-        # Return the array of RMS values for each profile
-        rmsArray = mathu.rmsMatrix2D( self.data, mask = templateMask, nanmask = True )
-
-        # Reshape RMS array to be linear and store in a new RMS array
-        linearRmsArray = np.reshape( rmsArray, ( self.ar.getNchan() * self.ar.getNsubint() ) )
-
-        # Best fit of data using a Gaussian fit
-        mu, sigma = np.nanmean( linearRmsArray ), np.nanstd( linearRmsArray )
+        rmsArray, linearRmsArray, mu, sigma = u.getRMSArrayProperties( self.data, templateMask )
 
         if showPlot == True:
 
@@ -213,8 +218,7 @@ class DataCull:
             rejectionCriterion = np.reshape( rejectionCriterion, ( self.ar.getNsubint(), self.ar.getNchan() ) )
 
         else:
-            print( "Allowed rejection criteria are either 'chauvenet' or 'DMAD'. Please use one of these..." )
-            exit()
+            raise ValueError( "Allowed rejection criteria are either 'chauvenet' or 'DMAD'. Please use one of these..." )
 
         # Set the weights of potential noise in each profile to 0
         u.zeroWeights( rejectionCriterion, self.ar, self.verbose )
@@ -227,7 +231,7 @@ class DataCull:
             print( "Data rejection cycle complete..." )
 
 
-    def fourierTransformRejection( self, showTempPlot = False, showOtherPlots = False ):
+    def fourierTransformRejection( self, criterion, showTempPlot = False, showOtherPlots = False ):
 
         '''
         Uses FFT (Fast Fourier Transform) to get the break-down of signals in the
@@ -242,10 +246,14 @@ class DataCull:
         profFFT = np.zeros_like( data )
         tempFFT = fft( tempData )
 
-        # Normalize the template array w.r.t the max value
+        # Normalize the template array w.r.t the max value and shift to middle
         tempFFT = abs( mathu.normalizeToMax( abs( tempFFT.T ) ) )
-
         tempFFT = fftshift( tempFFT )
+
+        # Create template FFT mask
+        fftTempMask = pu.binMaskFromTemplate( tempFFT )
+
+        rmsArray, linearRmsArray, mu, sigma = u.getRMSArrayProperties( data, fftTempMask )
 
         if showTempPlot:
             u.plotAndShow( tempFFT )
@@ -254,7 +262,7 @@ class DataCull:
         for time in np.arange( self.ar.getNsubint() ):
             for frequency in np.arange( self.ar.getNchan() ):
 
-                # FFT and normalize profile
+                # FFT then normalize and center FFT'd profile
                 profFFT[time][frequency] = fft( data[time][frequency] )
                 profFFT[time][frequency] = abs( mathu.normalizeToMax( abs( profFFT[time][frequency].T ) ) )
 
@@ -263,15 +271,23 @@ class DataCull:
                 if showOtherPlots:
                     u.plotAndShow( profFFT[time][frequency] )
 
-                # Check if profile FT matches template FT
-                test = ( profFFT[time][frequency] == tempFFT ).any().astype( int )    # REALLY BAD rejection criterion here!
+                # Check if profile FT RMS matches template FT RMS based on Chauvenet
+                if criterion is 'chauvenet': # Chauvenet's Criterion
 
-                if test == False:
+                    rejectionCriterion = mathu.chauvenet( rmsArray, mu, sigma, 2 )
+
+                elif criterion is 'DMAD': # Double Median Absolute Deviation
+
+                    rejectionCriterion = mathu.doubleMAD( linearRmsArray )
+                    rejectionCriterion = np.reshape( rejectionCriterion, ( self.ar.getNsubint(), self.ar.getNchan() ) )
+
+                else:
+                    raise ValueError( "Allowed rejection criteria are either 'chauvenet' or 'DMAD'. Please use one of these..." )
+
+                if not rejectionCriterion:
                     if self.verbose:
                         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
                     self.ar.setWeights( 0, t = time, f = frequency )
-
-        # Maybe some opw RMS rejection on FT compared with template?
 
         # Re-load the data cube
         self.data = self.ar.getData()
