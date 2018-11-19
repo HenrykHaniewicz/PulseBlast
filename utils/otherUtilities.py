@@ -24,6 +24,24 @@ def zeroWeights( criterion = None, archive = None, verbose = False ):
             print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
         archive.setWeights( 0, t = time, f = frequency )
 
+
+def getRMSArrayProperties( array, mask ):
+
+    '''
+    Returns the RMS array, a linearized RMS array, the mean and standard deviation
+    '''
+
+    # Return the array of RMS values for each profile
+    r = mathu.rmsMatrix2D( array, mask = mask, nanmask = True )
+
+    # Reshape RMS array to be linear and store in a new RMS array
+    l = np.reshape( r, ( array.shape[0] * array.shape[1] ) )
+
+    # Mean and standard deviation
+    m, s = np.nanmean( l ), np.nanstd( l )
+
+    return r, l, m, s
+
 # Delete and flush the current line on the console
 def restart_line():
      sys.stdout.write( '\r' )
