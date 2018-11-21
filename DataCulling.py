@@ -433,34 +433,3 @@ class DataCull:
 
         # Returns a 3-tuple of the form data, frequency bins, patches
         return n, bins, patches
-
-
-    def waterfallPlot( self, offset ):
-
-        '''
-        Plots pulse profiles as a waterfall plot using PyPulse.
-        '''
-
-        if len( np.shape( self.ar.getData() ) ) == 2:
-            self.ar.waterfall( offset = offset, border = 0.1 )
-
-        else:
-            print( "Invalid dimensions. Must be 2. Currently: {}".format( len( np.shape( self.ar.getData() ) ) ) )
-
-        return self
-
-
-    def greyscalePlot( self ):
-
-        '''
-        Plots pulse profiles as a greyscale plot using PyPulse.
-        '''
-
-        if len( np.shape( self.ar.getData() ) ) == 2:
-            plt.xlabel( "Phase bins" )
-            self.ar.imshow( cbar = True )
-
-        else:
-            print( "Invalid dimensions. Must be 2. Currently: {}".format( len( np.shape( self.ar.getData() ) ) ) )
-
-        return self
