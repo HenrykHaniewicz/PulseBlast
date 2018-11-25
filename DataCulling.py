@@ -3,6 +3,7 @@
 
 # Local imports
 import utils.pulsarUtilities as pu
+import utils.plotUtils as pltu
 import utils.otherUtilities as u
 import utils.mathUtils as mathu
 
@@ -203,9 +204,7 @@ class DataCull:
         if showPlot == True:
 
             # Creates the histogram
-            self.histogramPlot( linearRmsArray, mu, sigma, 0, 'Root Mean Squared', 'Frequency Density' )
-
-            plt.show()
+            pltu.histogram_and_curves( linearRmsArray, mean = mu, std_dev = sigma, x_axis = 'Root Mean Squared', y_axis = 'Frequency Density', title = r'$\mu={},\ \sigma={}$'.format( mu, sigma ), show = True, curve_list = [spyst.norm.pdf] )
 
         # Determine which criterion to use to reject data
         if criterion is 'chauvenet': # Chauvenet's Criterion
@@ -316,15 +315,11 @@ class DataCull:
         if showPlot == True:
 
             # Create the histograms as two subplots
-            plt.subplot(211)
-            self.histogramPlot( linearNBinShift, muS, sigmaS, 0, r'Bin Shift from Template, $\hat{\tau}$', 'Frequency Density' )
-            plt.subplot(212)
-            self.histogramPlot( linearNBinError, muE, sigmaE, 3, r'Bin Shift Error, $\sigma_{\tau}$', 'Frequency Density' )
+            pltu.histogram_and_curves( linearNBinShift, mean = muS, std_dev = sigmaS, x_axis = r'Bin Shift from Template, $\hat{\tau}$', y_axis = 'Frequency Density', title = r'$\mu={},\ \sigma={}$'.format( muS, sigmaS ), show = True, curve_list = [spyst.norm.pdf] )
+            pltu.histogram_and_curves( linearNBinError, mean = muE, std_dev = sigmaE, x_axis = r'Bin Shift Error, $\sigma_{\tau}$', y_axis = 'Frequency Density', title = r'$\mu={},\ \sigma={}$'.format( muE, sigmaE ), show = True, curve_list = [spyst.maxwell.pdf] )
 
             # Adjust subplots so they look nice
-            plt.subplots_adjust( top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40 )
-
-            plt.show()
+            #plt.subplots_adjust( top=0.92, bottom=0.15, left=0.15, right=0.95, hspace=0.55, wspace=0.40 )
 
         rejectionCriterionS, rejectionCriterionE = mathu.chauvenet( nBinShift, muS, sigmaS ), mathu.chauvenet( nBinError, muE, sigmaE )
 
@@ -386,50 +381,7 @@ class DataCull:
                         nBinShift[time][frequency] = np.nan
                         nBinError[time][frequency] = np.nan
 
-        # Mask the nan values in the array so that histogramPlot doesn't malfunction
+        # Mask the nan values in the array so that histogram_and_curves doesn't malfunction
         nBinShift, nBinError = np.ma.array( nBinShift, mask = np.isnan( nBinShift ) ), np.ma.array( nBinError, mask = np.isnan( nBinError ) )
 
         return nBinShift, nBinError
-
-
-    def histogramPlot( self, array, mean = 0, stdDev = 1, fit = 0, xAxis = 'x-axis', yAxis = 'y-axis' ):
-
-        '''
-        Plots and returns a histogram of some linear data array using matplotlib
-        and fits either a Gaussian (fit = 0), half-Gaussian (fit = 1) or skewnorm (fit = 2)
-        centered around the mean with a spread of stdDev.
-        If no mean or stddev are provided, a fit centered around a mean of 0 with
-        stddev of 1 will be used. If a fit is given outside the range, Gaussian is used.
-        Also use this function to set the x and y axis names.
-        '''
-
-        # Plot the histogram
-        n, bins, patches = plt.hist( array, bins = self.ar.getNchan(), density = True, color = 'black' )
-
-        # Add a 'best fit' probability distribution function based on the fit parameter
-        if fit == 0 or fit > 3:
-            xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
-            params = opt.curve_fit( spyst.norm.pdf, bins[1:], n, p0 = [mean, stdDev] )
-            yPlot = spyst.norm.pdf( xPlot, *params[0] )
-        elif fit == 1:
-            xPlot = np.linspace( 0, ( mean + ( 4 * stdDev ) ), 1000 )
-            yPlot = spyst.halfnorm.pdf( xPlot, mean, stdDev )
-        elif fit == 2:
-            skew = spyst.skew( array, nan_policy = 'omit' )
-            xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
-            yPlot = spyst.skewnorm.pdf( xPlot, skew, mean, stdDev )
-        else:
-            xPlot = np.linspace( ( mean - ( 4 * stdDev ) ), ( mean + ( 4 * stdDev ) ), 1000 )
-            params = opt.curve_fit( spyst.maxwell.pdf, bins[1:], n, p0 = [mean, stdDev] )
-            yPlot = spyst.maxwell.pdf( xPlot, *params[0] )
-
-        l = plt.plot( xPlot, yPlot, 'r--', linewidth = 2 )
-
-        # Format axes. If matplotlibrc has been modified to allow LaTeX, plots will use LaTeX
-        plt.ylabel( yAxis )
-        plt.xlabel( xAxis )
-        plt.title( r'$\mu=%.3f,\ \sigma=%.3f$' % ( mean, stdDev ) )
-        plt.grid( True )
-
-        # Returns a 3-tuple of the form data, frequency bins, patches
-        return n, bins, patches
