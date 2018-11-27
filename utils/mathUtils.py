@@ -4,6 +4,19 @@
 # Imports
 import numpy as np
 from custom_exceptions import DimensionError
+from scipy.stats import rv_continuous
+
+# Classes
+class henryk_distribution( rv_continuous ):
+
+    "Hello"
+
+    def _pdf( self, x, a = 1, b = 1, c = 2.0 ):
+        return np.sqrt(a) * ( np.exp(-(b*x)**2 / c ) / np.sqrt(2.0 * np.pi) )
+
+
+# Initialize all distribution function classes
+henryk = henryk_distribution( name = 'henryk' )
 
 # Functions
 

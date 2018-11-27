@@ -2,11 +2,13 @@
 
 # Imports
 from custom_exceptions import DimensionError
+import utils.mathUtils as mathu
 import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
+from inspect import signature
 
 color_list = [ 'b', 'g', 'r', 'c', 'y', 'm' ]
 
@@ -21,7 +23,8 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
     bgcolor = 'w'
     style = 'step'
 
-    fig = plt.figure( figsize = (6,6) )
+    # Set up figure and axes
+    fig = plt.figure( figsize = ( 6, 6 ) )
     ax = fig.add_subplot( 111, facecolor = bgcolor )
     xText = ax.set_xlabel( x_axis )
     yText = ax.set_ylabel( y_axis )
@@ -50,8 +53,24 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
         # Plot distribution curves
         if curve_list:
             for curve in curve_list:
+
+                sig = signature(curve)
+
+                print(str(sig))
+                args = sig.parameters['args']
+
+                print(args)
+
+                p = np.ones( len( str(args) ) )
+                print(p)
+
                 try:
-                    params = opt.curve_fit( curve, bins[1:], n, p0 = [0.5, 0.5] )
+                    try:
+                        params = opt.curve_fit( curve, bins[1:], n, p0 = p )
+                        print(params[0])
+                    except RuntimeError:
+                        continue
+
                     ax.plot( t, curve( t, *params[0] ), color = random.choice( color_list ), linewidth = 2 )
                 except TypeError:
                     ax.plot( t, curve( t ), color = random.choice( color_list ), linewidth = 2 )
@@ -199,11 +218,17 @@ if __name__ == "__main__":
     import scipy.stats as spyst
     import scipy.optimize as opt
 
-    array = np.array([ np.random.normal( loc = 0, scale = 1, size = 2000000 ), np.random.vonmises( kappa = 1, mu = 0, size = 2000000 ) ])
+    array1 = np.random.normal( loc = 0, scale = 1, size = 2000000 )
+
+    array2 = np.array([ np.random.normal( loc = 0, scale = 1, size = 2000000 ), np.random.vonmises( mu = 0, kappa = 1, size = 2000000 ) ])
 
     x_axis = "PDF in A"
     y_axis = "PDF in B"
 
-    title = r'$\mu_{{0}}={},\ \sigma_{{0}}={},\ \mu_{{1}}={},\ \sigma_{{1}}={}$'.format( 0, 1, 0, 1 )
+    title = r'$\mu_{{0}}={},\ \sigma_{{0}}={},\ \mu_{{1}}={},\ \kappa_{{1}}={}$'.format( 0, 1, 0, 1 )
 
-    histogram_and_curves( array, [0, 0], [1, 1], None, None, [-np.pi, np.pi], x_axis, y_axis, title, True, None, [ spyst.norm.pdf, spyst.vonmises.pdf ] )
+    #2D
+    #histogram_and_curves( array2, [0, 0], [1, 1], None, None, [-np.pi, np.pi], x_axis, y_axis, title, True, None, [ spyst.norm.pdf, spyst.vonmises.pdf ] )
+
+    #1D
+    histogram_and_curves( array1, 0, 1, None, None, None, "X", "Y", "PDF", True, None, [ spyst.vonmises.pdf, mathu.henryk.pdf, spyst.norm.pdf ] )
