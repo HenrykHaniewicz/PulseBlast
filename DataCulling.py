@@ -204,7 +204,7 @@ class DataCull:
         if showPlot == True:
 
             # Creates the histogram
-            pltu.histogram_and_curves( linearRmsArray, mean = mu, std_dev = sigma, x_axis = 'Root Mean Squared', y_axis = 'Frequency Density', title = r'$\mu={},\ \sigma={}$'.format( mu, sigma ), show = True, curve_list = [spyst.norm.pdf] )
+            pltu.histogram_and_curves( linearRmsArray, mean = mu, std_dev = sigma, x_axis = 'Root Mean Squared', y_axis = 'Frequency Density', title = r'$\mu={},\ \sigma={}$'.format( mu, sigma ), show = True, curve_list = [spyst.norm.pdf, mathu.henryk_pdf] )
 
         # Determine which criterion to use to reject data
         if criterion is 'chauvenet': # Chauvenet's Criterion

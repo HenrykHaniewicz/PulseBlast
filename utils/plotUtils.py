@@ -3,20 +3,47 @@
 # Imports
 from custom_exceptions import DimensionError
 import utils.mathUtils as mathu
-import random
+import utils.otherUtilities as u
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 from inspect import signature
 
-color_list = [ 'b', 'g', 'r', 'c', 'y', 'm' ]
+color_list = [ 'r', 'b', 'g', 'c', 'y', 'm' ]
 
 
 def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims = None, y_lims = None, x_axis = 'X', y_axis = 'Y', title = 'Title', show = True, filename = None, curve_list = None, **kwargs ):
 
     """
-    Plots a histogram of a data array in 1 or 2 dimensions and an arbitrary number of PDFs for comparison.
+    Histogram plotter for 1 or 2D data. Can compare PDFs in 1D
+
+    Parameters
+    ----------
+    array      : np.ndarray
+        1 or 2D data array
+    mean       : int, float, [int, int], [float, float]
+        Calculated mean of data
+    std_dev    : int, float, [int, int], [float, float]
+        Calculated standard deviation of data
+    bins       : int
+        Number of bins in histogram
+    x_lims, y_lims : [int, int], [float, float]
+        x and y limits of the plot
+    x_axis, y_axis, title : str
+        x, y and title names
+    show       : bool
+        Show plots (default is False)
+    filename   : str
+        Name of the file to save to (if None, the plot will not be saved)
+    curve_list : [ callable, ... ]
+        List of curves to fit to the data as defined by the user
+    **kwargs
+        kwargs passed to PDFs as given in curve_list
+
+    Returns
+    -------
+    Axes : ax
     """
 
     color = 'k'
@@ -52,28 +79,27 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
 
         # Plot distribution curves
         if curve_list:
-            for curve in curve_list:
+            for i, curve in enumerate( curve_list ):
 
-                sig = signature(curve)
+                color_index = i % len( color_list )
+                color = color_list[ color_index ]
 
-                print(str(sig))
-                args = sig.parameters['args']
+                p0_len = u.get_unique_fitting_parameter_length( curve )
 
-                print(args)
-
-                p = np.ones( len( str(args) ) )
-                print(p)
+                if not p0_len:
+                    p0 = np.ones( 2 )
+                else:
+                    p0 = np.ones( p0_len )
 
                 try:
                     try:
-                        params = opt.curve_fit( curve, bins[1:], n, p0 = p )
-                        print(params[0])
+                        params = opt.curve_fit( curve, bins[1:], n, p0 = p0 )
                     except RuntimeError:
                         continue
 
-                    ax.plot( t, curve( t, *params[0] ), color = random.choice( color_list ), linewidth = 2 )
+                    ax.plot( t, curve( t, *params[0] ), color = color, linewidth = 2 )
                 except TypeError:
-                    ax.plot( t, curve( t ), color = random.choice( color_list ), linewidth = 2 )
+                    ax.plot( t, curve( t ), color = color, linewidth = 2 )
 
         plt.grid( True )
 
@@ -219,6 +245,7 @@ if __name__ == "__main__":
     import scipy.optimize as opt
 
     array1 = np.random.normal( loc = 0, scale = 1, size = 2000000 )
+    #array1 = np.random.vonmises( mu = 0, kappa = 1, size = 2000000 )
 
     array2 = np.array([ np.random.normal( loc = 0, scale = 1, size = 2000000 ), np.random.vonmises( mu = 0, kappa = 1, size = 2000000 ) ])
 
@@ -231,4 +258,7 @@ if __name__ == "__main__":
     #histogram_and_curves( array2, [0, 0], [1, 1], None, None, [-np.pi, np.pi], x_axis, y_axis, title, True, None, [ spyst.norm.pdf, spyst.vonmises.pdf ] )
 
     #1D
-    histogram_and_curves( array1, 0, 1, None, None, None, "X", "Y", "PDF", True, None, [ spyst.vonmises.pdf, mathu.henryk.pdf, spyst.norm.pdf ] )
+    histogram_and_curves( array1, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.henryk_pdf, spyst.vonmises.pdf ] )
+
+    array1 = np.random.vonmises( mu = 0, kappa = 1, size = 2000000 )
+    histogram_and_curves( array1, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.henryk_pdf, spyst.vonmises.pdf ] )

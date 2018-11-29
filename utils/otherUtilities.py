@@ -5,6 +5,8 @@ import sys
 import os
 import platform
 import numpy as np
+import inspect
+from collections import namedtuple
 import matplotlib.pyplot as plt
 
 
@@ -62,6 +64,79 @@ def plotAndShow( vector, *curves ):
             plt.plot( curve, color = 'r--' )
     plt.show()
     plt.close()
+
+
+# Apparently, yes. Wrap inspect.signature
+
+def getargspec_no_self( func ):
+    """
+    EDITED FROM SCIPY
+
+    inspect.getargspec replacement using inspect.signature.
+    inspect.getargspec is deprecated in python 3. This is a replacement
+    based on the (new in python 3.3) `inspect.signature`.
+    Parameters
+    ----------
+    func : callable
+        A callable to inspect
+    Returns
+    -------
+    argspec : ArgSpec(args, varargs, varkw, defaults)
+        This is similar to the result of inspect.getargspec(func) under
+        python 2.x.
+        NOTE: if the first argument of `func` is self, it is *not*, I repeat
+        *not* included in argspec.args.
+        This is done for consistency between inspect.getargspec() under
+        python 2.x, and inspect.signature() under python 3.x.
+    """
+
+    ArgSpec = namedtuple('ArgSpec', ['args', 'varargs', 'keywords', 'defaults'])
+
+    sig = inspect.signature(func)
+    args = [
+        p.name for p in sig.parameters.values()
+        if p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+    ]
+    varargs = [
+        p.name for p in sig.parameters.values()
+        if p.kind == inspect.Parameter.VAR_POSITIONAL
+    ]
+    varargs = varargs[0] if varargs else None
+    varkw = [
+        p.name for p in sig.parameters.values()
+        if p.kind == inspect.Parameter.VAR_KEYWORD
+    ]
+    varkw = varkw[0] if varkw else None
+    defaults = [
+        p.default for p in sig.parameters.values()
+        if (p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD and
+           p.default is not p.empty)
+    ] or None
+    return ArgSpec(args, varargs, varkw, defaults)
+
+
+def get_unique_fitting_parameter_length( func ):
+
+    argspec = getargspec_no_self( func )
+
+    if len( argspec[0] ) is 0:
+        raise ValueError()
+
+    has_self = False
+    count = 0
+
+    for i, arg in enumerate( argspec[0] ):
+        if arg is 'self':
+            has_self = True
+            continue
+        if has_self and i is 1:
+            continue
+        if not has_self and i is 0:
+            continue
+
+        count += 1
+
+    return count
 
 
 def addExtension( file, ext, save = False, overwrite = False ):
