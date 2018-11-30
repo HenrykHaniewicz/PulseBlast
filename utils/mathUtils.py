@@ -6,9 +6,11 @@ import numpy as np
 from custom_exceptions import DimensionError
 from scipy.stats import rv_continuous
 
-# PDFs ripped from SciPy
-def henryk_pdf( x, a, b, c ):
-    return np.sqrt(a) * ( np.exp(-(b*x)**2 / c ) / np.sqrt(2.0 * np.pi) )
+# PDF classes
+class test_dist( rv_continuous ):
+
+    def _pdf( x, a, b, c ):
+        return np.sqrt(a) * ( np.exp(-(b*x)**2 / c ) / np.sqrt(2.0 * np.pi) )
 
 # Functions
 

@@ -204,7 +204,7 @@ class DataCull:
         if showPlot == True:
 
             # Creates the histogram
-            pltu.histogram_and_curves( linearRmsArray, mean = mu, std_dev = sigma, x_axis = 'Root Mean Squared', y_axis = 'Frequency Density', title = r'$\mu={},\ \sigma={}$'.format( mu, sigma ), show = True, curve_list = [spyst.norm.pdf, mathu.henryk_pdf] )
+            pltu.histogram_and_curves( linearRmsArray, mean = mu, std_dev = sigma, x_axis = 'Root Mean Squared', y_axis = 'Frequency Density', title = r'$\mu={},\ \sigma={}$'.format( mu, sigma ), show = True, curve_list = [spyst.norm.pdf, mathu.test_dist.test_pdf] )
 
         # Determine which criterion to use to reject data
         if criterion is 'chauvenet': # Chauvenet's Criterion
@@ -385,3 +385,23 @@ class DataCull:
         nBinShift, nBinError = np.ma.array( nBinShift, mask = np.isnan( nBinShift ) ), np.ma.array( nBinError, mask = np.isnan( nBinError ) )
 
         return nBinShift, nBinError
+
+
+# FOR TESTING
+if __name__ == "__main__":
+
+    dir = "/Volumes/Henryk_Data/PSR J1756-2251/1756-2251 Nancay Data November 2017/Nancay_BON_data/"
+    temp = dir + "Lbandtemplate.npy"
+
+    # Cycle through each file in the stored directory
+    for i, file in enumerate( os.listdir( dir ) ):
+
+        # Initialize DCO
+        try:
+            dco = DataCull( file, temp, dir, verbose = False )
+        except SystemExit:
+            continue
+        if dco.ar.getFrontend() is 'ROACH':
+            continue
+
+        dco.reject( criterion = 'chauvenet', iterations = 5, fourier = False, rms = True, binShift = False, showPlots = True )

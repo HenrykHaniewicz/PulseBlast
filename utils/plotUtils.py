@@ -8,7 +8,6 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
-from inspect import signature
 
 color_list = [ 'r', 'b', 'g', 'c', 'y', 'm' ]
 
@@ -43,7 +42,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
 
     Returns
     -------
-    Axes : ax
+    matplotlib Axes : ax
     """
 
     color = 'k'
@@ -60,7 +59,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
     if array.ndim is 1:
 
         if bins is None:
-            step = ( math.ceil( np.amax( array ) ) - math.floor( np.amin( array ) ) ) / 50
+            step = ( math.ceil( np.amax( array ) ) - math.floor( np.amin( array ) ) ) / ( 20 * abs( math.ceil( np.amax( array ) ) ) )
             bins = np.arange( math.floor( np.amin( array ) ), math.ceil( np.amax( array ) ), step )
 
         if not x_lims:
@@ -136,7 +135,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
 
         # Initialize bin size if not parsed in
         if bins is None:
-            step = ( math.ceil( np.amax( array ) ) - math.floor( np.amin( array ) ) ) / 500
+            step = ( math.ceil( np.amax( array ) ) - math.floor( np.amin( array ) ) ) / ( 100 * abs( math.ceil( np.amax( array ) ) ) )
             bins = [ np.arange( math.floor( np.amin( array[0] ) ), math.ceil( np.amax( array[0] ) ), step ), np.arange( math.floor( np.amin( array[1] ) ), math.ceil( np.amax( array[1] ) ), step ) ]
 
         # Plot the 2D histogram
@@ -170,7 +169,7 @@ def waterfall( array, ax = None, offset = None, border = 0, labels = True, bins 
         if offset is None:
             offset = np.max( np.average( array, axis = 0 ) )
 
-        fig = plt.figure( figsize = (6,6) )
+        fig = plt.figure( figsize = ( 6, 6 ) )
         bgcolor = 'w'
         ax = fig.add_subplot( 111, facecolor = bgcolor )
         color = 'k'
@@ -245,7 +244,7 @@ if __name__ == "__main__":
     import scipy.optimize as opt
 
     array1 = np.random.normal( loc = 0, scale = 1, size = 2000000 )
-    #array1 = np.random.vonmises( mu = 0, kappa = 1, size = 2000000 )
+    array1 = np.random.vonmises( mu = 0, kappa = 1, size = 2000000 )
 
     array2 = np.array([ np.random.normal( loc = 0, scale = 1, size = 2000000 ), np.random.vonmises( mu = 0, kappa = 1, size = 2000000 ) ])
 
@@ -255,10 +254,10 @@ if __name__ == "__main__":
     title = r'$\mu_{{0}}={},\ \sigma_{{0}}={},\ \mu_{{1}}={},\ \kappa_{{1}}={}$'.format( 0, 1, 0, 1 )
 
     #2D
-    #histogram_and_curves( array2, [0, 0], [1, 1], None, None, [-np.pi, np.pi], x_axis, y_axis, title, True, None, [ spyst.norm.pdf, spyst.vonmises.pdf ] )
+    histogram_and_curves( array2, [0, 0], [1, 1], None, None, [-np.pi, np.pi], x_axis, y_axis, title, True, None, [ spyst.norm.pdf, spyst.vonmises.pdf ] )
 
     #1D
-    histogram_and_curves( array1, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.henryk_pdf, spyst.vonmises.pdf ] )
+    #histogram_and_curves( array2, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.test_dist._pdf, spyst.vonmises.pdf ] )
 
-    array1 = np.random.vonmises( mu = 0, kappa = 1, size = 2000000 )
-    histogram_and_curves( array1, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.henryk_pdf, spyst.vonmises.pdf ] )
+    #array1 = np.random.vonmises( mu = 0, kappa = 1, size = 2000000 )
+    histogram_and_curves( array1, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.test_dist._pdf, spyst.vonmises.pdf ] )

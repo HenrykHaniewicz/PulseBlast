@@ -9,6 +9,8 @@ import inspect
 from collections import namedtuple
 import matplotlib.pyplot as plt
 
+from utils.mathUtils import rmsMatrix2D
+
 
 def zeroWeights( criterion = None, archive = None, verbose = False ):
 
@@ -34,7 +36,7 @@ def getRMSArrayProperties( array, mask ):
     '''
 
     # Return the array of RMS values for each profile
-    r = mathu.rmsMatrix2D( array, mask = mask, nanmask = True )
+    r = rmsMatrix2D( array, mask = mask, nanmask = True )
 
     # Reshape RMS array to be linear and store in a new RMS array
     l = np.reshape( r, ( array.shape[0] * array.shape[1] ) )
@@ -65,8 +67,6 @@ def plotAndShow( vector, *curves ):
     plt.show()
     plt.close()
 
-
-# Apparently, yes. Wrap inspect.signature
 
 def getargspec_no_self( func ):
     """
@@ -120,7 +120,7 @@ def get_unique_fitting_parameter_length( func ):
     argspec = getargspec_no_self( func )
 
     if len( argspec[0] ) is 0:
-        raise ValueError()
+        raise ValueError( "Length of ArgSpec must not be 0" )
 
     has_self = False
     count = 0
