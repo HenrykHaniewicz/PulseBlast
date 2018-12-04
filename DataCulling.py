@@ -138,7 +138,24 @@ class DataCull:
         if fourier:
             if self.verbose:
                 print( "Beginning FFT data rejection..." )
-            self.fourierTransformRejection( criterion, showPlots, showPlots )
+
+            for i in np.arange( iterations ):
+
+                self.fourierTransformRejection( criterion, showPlots, showPlots )
+
+                # If all possible outliers have been found and the flag is set to true, don't bother doing any more iterations.
+                if self.rejectionCompletionFlag:
+                    generation = i + 1
+                    if self.verbose:
+                        print( "RMS data rejection for {} complete after {} generations...".format( self.filename, generation ) )
+                    break
+
+            # If the completion flag is still false, the cycles finished before full excision
+            if self.verbose and not self.rejectionCompletionFlag:
+                print( "Maximum number of iterations ({}) completed...".format( iterations ) )
+
+            # Re-initialize the completion flag to false
+            self.rejectionCompletionFlag = False
 
 
         if rms:
@@ -241,6 +258,10 @@ class DataCull:
         data = self.ar.getData()
         tempData = self.template
 
+        # Initialize guess parameters and the curve to fit
+        guess_params = [100, 100, 1024]
+        curve = mathu.FFT_dist._pdf
+
         # Set up arrays for FFT
         profFFT = np.zeros_like( data )
         tempFFT = fft( tempData )
@@ -254,8 +275,14 @@ class DataCull:
 
         rmsArray, linearRmsArray, mu, sigma = u.getRMSArrayProperties( data, fftTempMask )
 
+        tempParams = opt.curve_fit( curve, np.arange( len( tempFFT ) ), tempFFT, p0 = guess_params )
+
+        t = np.arange( 0, len( tempFFT ), 0.01)
+
+        temp_fit = mathu.normalizeToMax( curve( t, *tempParams[0] ) )
+
         if showTempPlot:
-            u.plotAndShow( tempFFT )
+            pltu.plotAndShow( tempFFT, t, temp_fit )
 
         # Loop over the time and frequency indices (subints and channels)
         for time in np.arange( self.ar.getNsubint() ):
@@ -264,29 +291,51 @@ class DataCull:
                 # FFT then normalize and center FFT'd profile
                 profFFT[time][frequency] = fft( data[time][frequency] )
                 profFFT[time][frequency] = abs( mathu.normalizeToMax( abs( profFFT[time][frequency].T ) ) )
-
                 profFFT[time][frequency] = fftshift( profFFT[time][frequency] )
 
+                if all( profFFT[time][frequency] ) == 0:
+                    continue
+
+                # Get optimization parameters for each profile for the same curve used to fit the template.
+                params = opt.curve_fit( curve, np.arange( len( tempFFT ) ), profFFT[time][frequency], p0 = guess_params )
+
+                # Normalize the curve with the fitted parameters
+                prof_fit = mathu.normalizeToMax( curve( t, *params[0] ) )
+
                 if showOtherPlots:
-                    u.plotAndShow( profFFT[time][frequency] )
+                    pltu.plotAndShow( profFFT[time][frequency], t, prof_fit, temp_fit )
 
-                # Check if profile FT RMS matches template FT RMS based on Chauvenet
-                if criterion is 'chauvenet': # Chauvenet's Criterion
+                # if not all( u.is_similar_array( tempParams[0], params[0], tolerance = [ 1e-1, 1, 2 ] ) ):
+                #     print( "Not similar" )
+                #     continue
+                if params[0][1] < 0:
+                    print( "Not similar" )
 
-                    rejectionCriterion = mathu.chauvenet( rmsArray, mu, sigma, 2 )
-
-                elif criterion is 'DMAD': # Double Median Absolute Deviation
-
-                    rejectionCriterion = mathu.doubleMAD( linearRmsArray )
-                    rejectionCriterion = np.reshape( rejectionCriterion, ( self.ar.getNsubint(), self.ar.getNchan() ) )
-
-                else:
-                    raise ValueError( "Allowed rejection criteria are either 'chauvenet' or 'DMAD'. Please use one of these..." )
-
-                if not rejectionCriterion:
                     if self.verbose:
                         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
                     self.ar.setWeights( 0, t = time, f = frequency )
+
+                else:
+                    print( "Similar" )
+
+
+                # # Check if profile FT RMS matches template FT RMS based on Chauvenet
+                # if criterion is 'chauvenet': # Chauvenet's Criterion
+                #
+                #     rejectionCriterion = mathu.chauvenet( rmsArray, mu, sigma, 2 )
+                #
+                # elif criterion is 'DMAD': # Double Median Absolute Deviation
+                #
+                #     rejectionCriterion = mathu.doubleMAD( linearRmsArray )
+                #     rejectionCriterion = np.reshape( rejectionCriterion, ( self.ar.getNsubint(), self.ar.getNchan() ) )
+                #
+                # else:
+                #     raise ValueError( "Allowed rejection criteria are either 'chauvenet' or 'DMAD'. Please use one of these..." )
+                #
+                # if not rejectionCriterion:
+                #     if self.verbose:
+                #         print( "Setting the weight of (subint: {}, channel: {}) to 0".format( time, frequency ) )
+                #     self.ar.setWeights( 0, t = time, f = frequency )
 
         # Re-load the data cube
         self.data = self.ar.getData()
@@ -404,4 +453,9 @@ if __name__ == "__main__":
         if dco.ar.getFrontend() is 'ROACH':
             continue
 
-        dco.reject( criterion = 'chauvenet', iterations = 5, fourier = False, rms = True, binShift = False, showPlots = True )
+        #dco.reject( criterion = 'chauvenet', iterations = 5, fourier = False, rms = True, binShift = False, showPlots = True )
+
+        #dco.ar.tscrunch( nsubint = 4 )
+        #dco.ar.fscrunch( nchan = 4 )
+
+        dco.fourierTransformRejection( 'chauvenet', True, True )
