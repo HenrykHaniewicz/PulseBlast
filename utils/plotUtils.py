@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
-color_list = [ 'r', 'b', 'g', 'c', 'y', 'm' ]
+color_list = [ 'r', 'g', 'b', 'c', 'y', 'm' ]
 
 
 def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims = None, y_lims = None, x_axis = 'X', y_axis = 'Y', title = 'Title', show = True, filename = None, curve_list = None, **kwargs ):
@@ -35,7 +35,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
         Show plots (default is False)
     filename   : str
         Name of the file to save to (if None, the plot will not be saved)
-    curve_list : [ callable, ... ]
+    curve_list : list of callables
         List of curves to fit to the data as defined by the user
     **kwargs
         kwargs passed to PDFs as given in curve_list
@@ -58,6 +58,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
 
     if array.ndim is 1:
 
+        # Number of histogram bins to use (if not supplied by user)
         if bins is None:
             step = ( math.ceil( np.amax( array ) ) - math.floor( np.amin( array ) ) ) / ( 20 * abs( math.ceil( np.amax( array ) ) ) )
             bins = np.arange( math.floor( np.amin( array ) ), math.ceil( np.amax( array ) ), step )
@@ -68,6 +69,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
         else:
             x_min, x_max = x_lims
 
+        # Linespace for curve plotting
         t = np.arange( x_min , x_max, 0.01)
 
         # Plot the 1D histogram
@@ -80,9 +82,11 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
         if curve_list:
             for i, curve in enumerate( curve_list ):
 
+                # Selects color from list
                 color_index = i % len( color_list )
                 color = color_list[ color_index ]
 
+                # Find the number of fitting arguments in the desired curve
                 p0_len = u.get_unique_fitting_parameter_length( curve )
 
                 if not p0_len:
@@ -90,6 +94,8 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
                 else:
                     p0 = np.ones( p0_len )
 
+
+                # Try fitting and plotting. If fit doesn't work, just plot the histogram
                 try:
                     try:
                         params = opt.curve_fit( curve, bins[1:], n, p0 = p0 )
@@ -102,6 +108,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
 
         plt.grid( True )
 
+        # Save file
         if filename is not None:
             plt.savefig( filename )
         if show:
@@ -110,7 +117,6 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
             plt.close()
 
     elif array.ndim is 2 and array.shape[0] is 2:
-
 
         # Basically determines whether mean given was [float, float] or float
         if not x_lims:
@@ -229,12 +235,25 @@ def greyscale( array, ax = None, cbar = False, mask = None, show = True, filenam
 
     return ax
 
+# Wrapper for matplotlib imshow
 def imshow( x, ax = None, origin = 'lower', interpolation = 'nearest', aspect = 'auto', **kwargs ):
     if ax is not None:
         im = ax.imshow( x, origin = origin, interpolation = interpolation, aspect = aspect, **kwargs )
     else:
         im = plt.imshow( x, origin = origin, interpolation = interpolation, aspect = aspect, **kwargs )
     return im
+
+
+# (conv function) Plots and shows a vector over a range and maybe a curve or two using matplotlib then frees up memory
+def plotAndShow( vector, range = None, *curves ):
+    plt.plot( vector, color = 'k' )
+    if curves and range is not None:
+        for i, curve in enumerate( curves ):
+            color_index = i % len( color_list )
+            color = color_list[ color_index ]
+            plt.plot( range, curve, color = color )
+    plt.show()
+    plt.close()
 
 
 # FOR TESTING
@@ -254,7 +273,7 @@ if __name__ == "__main__":
     title = r'$\mu_{{0}}={},\ \sigma_{{0}}={},\ \mu_{{1}}={},\ \kappa_{{1}}={}$'.format( 0, 1, 0, 1 )
 
     #2D
-    histogram_and_curves( array2, [0, 0], [1, 1], None, None, [-np.pi, np.pi], x_axis, y_axis, title, True, None, [ spyst.norm.pdf, spyst.vonmises.pdf ] )
+    #histogram_and_curves( array2, [0, 0], [1, 1], None, None, [-np.pi, np.pi], x_axis, y_axis, title, True, None, [ spyst.norm.pdf, spyst.vonmises.pdf ] )
 
     #1D
     #histogram_and_curves( array2, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.test_dist._pdf, spyst.vonmises.pdf ] )

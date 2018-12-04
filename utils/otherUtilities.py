@@ -58,14 +58,28 @@ def display_status( iteration, MAX_ITER ):
     sys.stdout.write('{0:<10d}[{1:>3d}%]'.format( iteration, int( 100 * float( iteration )/float( MAX_ITER ) ) ) )
     sys.stdout.flush()
 
-# (conv function) Plots and shows a vector and maybe a curve or two using matplotlib then frees up memory
-def plotAndShow( vector, *curves ):
-    plt.plot( vector )
-    if curves:
-        for curve in curves:
-            plt.plot( curve, color = 'r--' )
-    plt.show()
-    plt.close()
+# Checks if two arrays (or lists) of the same shape are equivalent element-wise
+def is_similar_array( array1, array2, tolerance = 1e-7 ):
+
+    if not isinstance( array1, np.ndarray ):
+        array1 = np.array( array1 )
+    if not isinstance( array2, np.ndarray ):
+        array2 = np.array( array2 )
+
+    if array1.shape != array2.shape:
+        raise ValueError( "Both arrays must have the same shape. Shape of Array 1: {}. Shape of Array 2: {}".format( array1.shape, array2.shape ) )
+
+    if isinstance( tolerance, np.ndarray ):
+        if tolerance.shape != array1.shape:
+            raise ValueError( "If tolerance is an array, it must have the same shape as the inputs. Shape of tolerance array: {}. Shape of inputs: {}".format( tolerance.shape, array1.shape ) )
+    elif isinstance( tolerance, list ):
+        tolerance = np.array( tolerance )
+        if tolerance.shape != array1.shape:
+            raise ValueError( "If tolerance is an array, it must have the same shape as the inputs. Shape of tolerance array: {}. Shape of inputs: {}".format( tolerance.shape, array1.shape ) )
+
+    diff = abs( np.subtract( array1, array2 ) )
+
+    return diff < tolerance
 
 
 def getargspec_no_self( func ):
