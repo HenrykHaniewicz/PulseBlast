@@ -12,6 +12,11 @@ class test_dist( rv_continuous ):
     def _pdf( x, a, b, c ):
         return np.sqrt(a) * ( np.exp(-(b*x)**2 / c ) / np.sqrt(2.0 * np.pi) )
 
+class FFT_dist( rv_continuous ):
+
+    def _pdf( x, b, a, k ):
+        return (b/(np.sqrt(1 + a*((k-x)**2))))
+
 # Functions
 
 def rootMeanSquare( array ):
@@ -20,8 +25,7 @@ def rootMeanSquare( array ):
     Returns the RMS of a data array
     '''
 
-    rms = np.sqrt( np.mean( np.power( array, 2 ) ) )
-    return rms
+    return np.sqrt( np.mean( np.power( array, 2 ) ) )
 
 
 def rmsMatrix2D( array, mask = None, nanmask = False ):
