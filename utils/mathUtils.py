@@ -2,6 +2,7 @@
 # Henryk T. Haniewicz, 2018
 
 # Imports
+import math
 import numpy as np
 from custom_exceptions import DimensionError
 from scipy.stats import rv_continuous
@@ -18,7 +19,6 @@ class FFT_dist( rv_continuous ):
         return (b/(np.sqrt(1 + a*((k-x)**2))))
 
 # Functions
-
 def rootMeanSquare( array ):
 
     '''
@@ -107,6 +107,9 @@ def doubleMAD( vector, threshold = 3.5 ):
     A return of True implies an outlying data point.
     '''
 
+    if vector.ndim is not 1:
+        raise DimensionError( "Input must be a 1D vector." )
+
     # Calculate the overall median (allows for masked vectors)
     m = np.ma.median( vector )
 
@@ -128,3 +131,46 @@ def doubleMAD( vector, threshold = 3.5 ):
 
     # Return true if the MZS is greater than the threshold
     return MZS > threshold
+
+
+# Time handlers
+def minutes_to_seconds( minutes, seconds ):
+    return ( minutes * 60 ) + seconds
+
+def hours_to_seconds( hours, minutes, seconds ):
+    return ( hours * 3600 ) + minutes_to_seconds( minutes, seconds )
+
+def days_to_seconds( days, hours, minutes, seconds ):
+    return ( days * 86400 ) + hours_to_seconds( hours, minutes, seconds )
+
+def seconds_to_minutes( seconds, format = False ):
+    mins = math.floor( seconds / 60 )
+    secs = seconds % 60
+    if format:
+        output = '{0}m\ {1:.2f}s'.format( mins, secs )
+    else:
+        output = mins, secs
+
+    return output
+
+def seconds_to_hours( seconds, format = False ):
+    hours = math.floor( seconds / 3600 )
+    remainder = seconds % 3600
+    mins, secs = seconds_to_minutes( remainder )
+    if format:
+        output = '{0}h\ {1}m\ {2:.2f}s'.format( hours, mins, secs )
+    else:
+        output = hours, mins, secs
+
+    return output
+
+def seconds_to_days( seconds, format = False ):
+    days = math.floor( seconds / 86400 )
+    remainder = seconds % 86400
+    hours, mins, secs = seconds_to_hours( remainder )
+    if format:
+        output = '{0}d\ {1}h\ {2}m\ {3:.2f}s'.format( days, hours, mins, secs )
+    else:
+        output = days, hours, mins, secs
+
+    return output
