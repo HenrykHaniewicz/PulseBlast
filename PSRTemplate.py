@@ -313,7 +313,7 @@ if __name__ == "__main__":
             parser.add_argument( '-b', dest = 'band', metavar = 'Frequency Band', nargs = 1, default = None, help = 'Frequency band of observation.' )
             parser.add_argument( '-o', dest = 'outputfile', metavar = 'Output File', nargs = 1, default = None, help = 'Name of the output file and path.' )
             parser.add_argument( '-d', dest = 'directories', metavar = 'Directories List', nargs = '*', default = None, help = 'Directories to search for PSRFITS files in.' )
-            parser.add_argument( '-v', dest = 'verbose', metavar = 'Verbose Mode', action = 'store_true', default = False, help = 'Prints information to the console.' )
+            parser.add_argument( '-v', dest = 'verbose', action = 'store_true', default = False, help = 'Prints information to the console.' )
 
             args = parser.parse_args()
 

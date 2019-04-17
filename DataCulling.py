@@ -79,7 +79,7 @@ class DataCull:
 
         # Togglable print options
         if self.verbose:
-            np.set_printoptions( threshold = np.nan )
+            np.set_printoptions( threshold = np.inf )
 
         # Check if Signal / Noise is too low
         if self.ar.getSN() < SNLim:
