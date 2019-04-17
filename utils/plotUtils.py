@@ -1,18 +1,23 @@
 # Plotting utilities
 
-# Imports
+# Local imports
 from custom_exceptions import DimensionError
 import utils.mathUtils as mathu
+from utils.mathUtils import minutes_to_seconds as m
+from utils.mathUtils import seconds_to_minutes as inv_m
 import utils.otherUtilities as u
+
+# External imports
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
+# Hard coded color list - what fun!
 color_list = [ 'r', 'g', 'b', 'c', 'y', 'm' ]
 
 
-def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims = None, y_lims = None, x_axis = 'X', y_axis = 'Y', title = 'Title', show = True, filename = None, curve_list = None, **kwargs ):
+def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims = None, y_lims = None, x_axis = 'X', y_axis = 'Y', title = 'Title', show = True, filename = None, curve_list = None, labels = None, **kwargs ):
 
     """
     Histogram plotter for 1 or 2D data. Can compare PDFs in 1D
@@ -37,8 +42,10 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
         Name of the file to save to (if None, the plot will not be saved)
     curve_list : list of callables
         List of curves to fit to the data as defined by the user
+    labels     : [str, str, ...]
+        List of legend labels for the curve list
     **kwargs
-        kwargs passed to PDFs as given in curve_list
+        kwargs passed to np.hist()
 
     Returns
     -------
@@ -47,7 +54,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
 
     color = 'k'
     bgcolor = 'w'
-    style = 'step'
+    style = 'stepfilled'
 
     # Set up figure and axes
     fig = plt.figure( figsize = ( 6, 6 ) )
@@ -55,6 +62,10 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
     xText = ax.set_xlabel( x_axis )
     yText = ax.set_ylabel( y_axis )
     title = ax.set_title( title )
+
+    # Convert any lists or dicts to numpy arrays
+    if not isinstance( array, np.ndarray ):
+        array = np.array( array )
 
     if array.ndim is 1:
 
@@ -73,7 +84,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
         t = np.arange( x_min , x_max, 0.01)
 
         # Plot the 1D histogram
-        n, bins, patches = ax.hist( array, bins = bins, density = True, color = color, histtype = style, linewidth = 2 )
+        n, bins, patches = ax.hist( array, bins = bins, density = True, color = color, histtype = style, linewidth = 2, **kwargs )
 
         xlim = ax.set_xlim( x_min, x_max )
         ylim = ax.set_ylim( 0, 1.2 * np.amax( n ) )
@@ -90,7 +101,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
                 p0_len = u.get_unique_fitting_parameter_length( curve )
 
                 if not p0_len:
-                    p0 = np.ones( 2 )
+                    p0 = [ mean, std_dev ]
                 else:
                     p0 = np.ones( p0_len )
 
@@ -102,9 +113,17 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
                     except RuntimeError:
                         continue
 
-                    ax.plot( t, curve( t, *params[0] ), color = color, linewidth = 2 )
+                    line, = ax.plot( t, curve( t, *params[0] ), color = color, linewidth = 2 )
                 except TypeError:
-                    ax.plot( t, curve( t ), color = color, linewidth = 2 )
+                    line, = ax.plot( t, curve( t ), color = color, linewidth = 2 )
+
+            if labels:
+                leg_labs = np.zeros( len( labels ) )
+
+                if len( labels ) == len( curve_list ):
+                    leg_labs[i] = line.set_label( labels[i] )
+                    ax.legend()
+
 
         plt.grid( True )
 
@@ -113,8 +132,6 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
             plt.savefig( filename )
         if show:
             plt.show()
-        else:
-            plt.close()
 
     elif array.ndim is 2 and array.shape[0] is 2:
 
@@ -145,7 +162,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
             bins = [ np.arange( math.floor( np.amin( array[0] ) ), math.ceil( np.amax( array[0] ) ), step ), np.arange( math.floor( np.amin( array[1] ) ), math.ceil( np.amax( array[1] ) ), step ) ]
 
         # Plot the 2D histogram
-        h, x_edge, y_edge, quad_mesh = ax.hist2d( array[0], array[1], bins = bins )
+        h, x_edge, y_edge, quad_mesh = ax.hist2d( array[0], array[1], bins = bins, **kwargs )
 
         xlim = ax.set_xlim( x_min, x_max )
         ylim = ax.set_ylim( y_min, y_max )
@@ -165,7 +182,7 @@ def histogram_and_curves( array, mean = 0.0, std_dev = 1.0, bins = None, x_lims 
     return ax
 
 
-def waterfall( array, ax = None, offset = None, border = 0, labels = True, bins = None, show = True ):
+def waterfall( array, ax = None, offset = None, border = 0, labels = True, bins = None, show = True, **kwargs ):
 
     """
     Waterfall plot of an array. Requires an array of 2 dimensions.
@@ -177,7 +194,7 @@ def waterfall( array, ax = None, offset = None, border = 0, labels = True, bins 
 
         fig = plt.figure( figsize = ( 6, 6 ) )
         bgcolor = 'w'
-        ax = fig.add_subplot( 111, facecolor = bgcolor )
+        ax = fig.add_subplot( 111, facecolor = bgcolor, **kwargs )
         color = 'k'
 
         if bins is None:
@@ -279,4 +296,4 @@ if __name__ == "__main__":
     #histogram_and_curves( array2, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.test_dist._pdf, spyst.vonmises.pdf ] )
 
     #array1 = np.random.vonmises( mu = 0, kappa = 1, size = 2000000 )
-    histogram_and_curves( array1, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.test_dist._pdf, spyst.vonmises.pdf ] )
+    #histogram_and_curves( array1, 0, 1, None, [-np.pi, np.pi], None, "X", "Y", "PDF", True, None, [ mathu.test_dist._pdf, spyst.vonmises.pdf ] )
